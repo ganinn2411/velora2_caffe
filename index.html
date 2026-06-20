@@ -1,0 +1,757 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="theme-color" content="#080808">
+  <title>AURA Coffee & Kitchen — POS</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<!-- ══════════════════════════════════════════════════
+     LOCK SCREEN — Personel Seçimi
+══════════════════════════════════════════════════════ -->
+<div class="lock-screen" id="lockScreen">
+  <div class="lock-bg-orb lock-orb1"></div>
+  <div class="lock-bg-orb lock-orb2"></div>
+  <div class="lock-card">
+    <div class="lock-logo"><span class="lock-logo-letter">A</span></div>
+    <div class="lock-title">AURA</div>
+    <div class="lock-subtitle">Coffee &amp; Kitchen POS</div>
+    <p style="font-size:10px;color:var(--text3);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:14px;">Personeli Seçin</p>
+    <div class="staff-grid" id="staffGrid">
+      <!-- JS ile doldurulur -->
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════
+     PIN SCREEN
+══════════════════════════════════════════════════════ -->
+<div class="lock-screen" id="pinScreen" style="display:none">
+  <div class="lock-bg-orb lock-orb1"></div>
+  <div class="lock-bg-orb lock-orb2"></div>
+  <div class="pin-card" id="pinCard" style="display:flex;flex-direction:column;align-items:center;">
+    <button class="pin-back-btn" onclick="backToStaffSelect()">
+      <i class="fa-solid fa-chevron-left"></i> Geri
+    </button>
+    <div class="pin-user-avatar" id="pinUserAvatar" style="color:#0a0a0a">K</div>
+    <div class="pin-user-name" id="pinUserName">Kerem</div>
+    <div class="pin-user-role" id="pinUserRole">Müdür</div>
+    <div class="pin-dots">
+      <div class="pin-dot" id="dot0"></div>
+      <div class="pin-dot" id="dot1"></div>
+      <div class="pin-dot" id="dot2"></div>
+      <div class="pin-dot" id="dot3"></div>
+    </div>
+    <div class="pin-error" id="pinError"></div>
+    <div class="pin-grid">
+      <button class="pin-btn" onclick="pressPin('1')">1</button>
+      <button class="pin-btn" onclick="pressPin('2')">2</button>
+      <button class="pin-btn" onclick="pressPin('3')">3</button>
+      <button class="pin-btn" onclick="pressPin('4')">4</button>
+      <button class="pin-btn" onclick="pressPin('5')">5</button>
+      <button class="pin-btn" onclick="pressPin('6')">6</button>
+      <button class="pin-btn" onclick="pressPin('7')">7</button>
+      <button class="pin-btn" onclick="pressPin('8')">8</button>
+      <button class="pin-btn" onclick="pressPin('9')">9</button>
+      <button class="pin-btn" style="opacity:0" disabled></button>
+      <button class="pin-btn" onclick="pressPin('0')">0</button>
+      <button class="pin-btn pin-del" onclick="deletePin()"><i class="fa-solid fa-delete-left"></i></button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════
+     APP SHELL
+══════════════════════════════════════════════════════ -->
+<div class="app" id="appShell" style="display:none">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="sidebar-logo">A</div>
+    <nav class="sidebar-nav">
+      <button class="nav-btn active" id="nav-pos" onclick="switchView('pos')">
+        <i class="fa-solid fa-cash-register"></i>
+        <span class="nav-label">Sipariş</span>
+      </button>
+      <button class="nav-btn" id="nav-tables" onclick="switchView('tables')">
+        <i class="fa-solid fa-table-cells-large"></i>
+        <span class="nav-label">Masalar</span>
+      </button>
+      <button class="nav-btn" id="nav-barista" onclick="switchView('barista')">
+        <i class="fa-solid fa-mug-hot"></i>
+        <span class="nav-label">Barista</span>
+      </button>
+      <button class="nav-btn" id="nav-reports" onclick="switchView('reports')">
+        <i class="fa-solid fa-chart-line"></i>
+        <span class="nav-label">Rapor</span>
+      </button>
+      <button class="nav-btn" id="nav-menu" onclick="switchView('menu')">
+        <i class="fa-solid fa-utensils"></i>
+        <span class="nav-label">Menü</span>
+      </button>
+      <button class="nav-btn" id="nav-coupons" onclick="switchView('coupons')">
+        <i class="fa-solid fa-ticket"></i>
+        <span class="nav-label">Kupon</span>
+        <span class="nav-badge" id="couponNavBadge" style="display:none">0</span>
+      </button>
+    </nav>
+    <div class="sidebar-bottom">
+      <button class="nav-btn" id="nav-settings" onclick="switchView('settings')">
+        <i class="fa-solid fa-gear"></i>
+        <span class="nav-label">Ayarlar</span>
+      </button>
+      <div class="staff-pill">
+        <div class="staff-pill-avatar" id="staffPillAvatar">K</div>
+        <span class="staff-pill-name" id="staffPillName">Kerem</span>
+        <span class="staff-pill-role" id="staffPillRole">Müdür</span>
+      </div>
+      <button class="nav-btn" onclick="logout()">
+        <i class="fa-solid fa-right-from-bracket"></i>
+        <span class="nav-label">Çıkış</span>
+      </button>
+    </div>
+  </aside>
+
+  <!-- VIEWS WRAPPER -->
+
+
+    <!-- ── POS VIEW ───────────────────────────────────── -->
+    <div class="view" id="view-pos">
+      <div class="topbar">
+        <div class="topbar-left">
+          <div class="topbar-title">Sipariş Paneli</div>
+          <div class="topbar-meta clock-date"></div>
+        </div>
+        <div style="flex:1;display:flex;justify-content:center;">
+          <div class="search-box">
+            <i class="fa-solid fa-magnifying-glass search-icon"></i>
+            <input type="text" class="search-input" id="posSearch" placeholder="Menüde ürün ara..." oninput="filterProducts()">
+          </div>
+        </div>
+        <div class="topbar-right">
+          <span class="topbar-time clock-time"></span>
+        </div>
+      </div>
+      <div class="pos-body">
+        <!-- Menü paneli -->
+        <div class="menu-panel">
+          <div class="cat-tabs" id="catTabs"></div>
+          <div class="product-scroll">
+            <div class="product-grid" id="productGrid"></div>
+          </div>
+        </div>
+        <!-- Sipariş paneli -->
+        <div class="order-panel">
+          <div class="order-header">
+            <div class="order-header-top">
+              <div class="order-title">Sipariş</div>
+              <div class="order-meta-row">
+                <span class="order-badge" id="orderBadge">#—</span>
+                <button class="order-clear-btn" onclick="clearOrder()">
+                  <i class="fa-solid fa-trash"></i> Temizle
+                </button>
+              </div>
+            </div>
+            <div class="order-type-toggle">
+              <button class="ot-btn active" id="ot-dinein" onclick="setOrderType('dinein')">
+                <i class="fa-solid fa-utensils"></i> Masada
+              </button>
+              <button class="ot-btn" id="ot-takeaway" onclick="setOrderType('takeaway')">
+                <i class="fa-solid fa-bag-shopping"></i> Paket / Al-Götür
+              </button>
+            </div>
+            <button class="table-select-btn" id="tableSelectBtn" onclick="window._selectingTable=true; switchView('tables')">
+              <i class="fa-solid fa-table-cells-large"></i>
+              <span id="selectedTableLabel">Masa Seç</span>
+              <i class="fa-solid fa-chevron-right" style="margin-left:auto;font-size:10px;opacity:.5;"></i>
+            </button>
+          </div>
+          <div class="order-list" id="orderList">
+            <div class="order-empty">
+              <div class="order-empty-icon">🛒</div>
+              <p>Sepet boş</p>
+            </div>
+          </div>
+          <div class="order-note-wrap">
+            <div class="note-label"><i class="fa-regular fa-note-sticky"></i> Sipariş Notu</div>
+            <textarea class="note-input" id="orderNote" placeholder="Özel istek, alerji bilgisi..."></textarea>
+          </div>
+          <div class="order-totals">
+            <div class="total-row"><span>Ara Toplam</span><span id="subtotalDisplay">0,00 ₺</span></div>
+            <div class="total-row" id="discountRow" style="display:none;color:var(--green)">
+              <span>İndirim</span><span id="discountDisplay">- 0,00 ₺</span>
+            </div>
+            <div class="total-row total-grand"><span>Genel Toplam</span><span id="totalDisplay">0,00 ₺</span></div>
+          </div>
+          <div class="discount-wrap">
+            <button class="discount-toggle" onclick="toggleDiscount()">
+              <i class="fa-solid fa-percent"></i> İndirim / Kupon Ekle
+            </button>
+            <div id="discountBox" style="display:none">
+              <div class="discount-box">
+                <input type="text" class="discount-input" id="couponInput" placeholder="Kupon kodu...">
+                <button class="discount-apply" onclick="applyCoupon()">Uygula</button>
+                <button class="discount-remove" id="removeDiscount" onclick="removeDiscount()" style="display:none">✕</button>
+              </div>
+              <div id="couponMsg" style="font-size:11px;margin-top:6px;padding:0 2px;"></div>
+            </div>
+          </div>
+          <div class="payment-section" id="paymentSection">
+            <div class="payment-label">Ödeme Yöntemi</div>
+            <div class="payment-methods">
+              <button class="pay-method active" id="pm-cash" onclick="selectPayment('cash')">
+                <i class="fa-solid fa-money-bill-wave"></i> Nakit
+              </button>
+              <button class="pay-method" id="pm-card" onclick="selectPayment('card')">
+                <i class="fa-solid fa-credit-card"></i> Kart
+              </button>
+              <button class="pay-method" id="pm-split" onclick="selectPayment('split')">
+                <i class="fa-solid fa-divide"></i> Bölüşüm
+              </button>
+            </div>
+          </div>
+          <div class="dinein-note" id="dineinNote">
+            <i class="fa-solid fa-circle-info"></i> Ödeme, masa kapatılırken alınacak.
+          </div>
+          <div style="padding:0 12px 14px;flex-shrink:0;">
+            <button class="confirm-btn" id="confirmBtn" onclick="confirmOrder()" disabled>
+              <span id="confirmBtnLabel">Siparişi Mutfağa Gönder</span>
+              <span class="confirm-total" id="confirmTotal">0,00 ₺</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── TABLES VIEW ────────────────────────────────── -->
+    <div class="view" id="view-tables" style="display:none">
+      <div class="topbar">
+        <div class="topbar-left">
+          <div class="topbar-title">Masa Planı</div>
+          <div class="topbar-meta clock-date"></div>
+        </div>
+        <div class="topbar-right">
+          <div class="table-legend">
+            <span><span class="legend-dot dot-free"></span>Boş</span>
+            <span><span class="legend-dot dot-occupied"></span>Dolu</span>
+            <span><span class="legend-dot dot-waiting"></span>Bekliyor</span>
+          </div>
+        </div>
+      </div>
+      <div class="tables-body" id="tablesBody"></div>
+    </div>
+
+    <!-- ── BARISTA VIEW ───────────────────────────────── -->
+    <div class="view" id="view-barista" style="display:none">
+      <div class="topbar">
+        <div class="topbar-left">
+          <div class="topbar-title">Barista Ekranı</div>
+          <div class="topbar-meta">Canlı sipariş takibi</div>
+        </div>
+        <div class="topbar-right">
+          <div class="barista-status-row">
+            <div class="barista-status-dot"></div>
+            <span style="font-size:12px;color:var(--text3)">Canlı</span>
+          </div>
+        </div>
+      </div>
+      <div class="barista-body">
+        <div class="barista-columns">
+          <div class="barista-col">
+            <div class="barista-col-header pending">
+              <i class="fa-solid fa-clock"></i> Bekliyor
+              <span class="col-count pending" id="count-pending">0</span>
+            </div>
+            <div class="barista-queue" id="queue-pending"></div>
+          </div>
+          <div class="barista-col">
+            <div class="barista-col-header preparing">
+              <i class="fa-solid fa-fire"></i> Hazırlanıyor
+              <span class="col-count preparing" id="count-preparing">0</span>
+            </div>
+            <div class="barista-queue" id="queue-preparing"></div>
+          </div>
+          <div class="barista-col">
+            <div class="barista-col-header ready">
+              <i class="fa-solid fa-check-circle"></i> Hazır
+              <span class="col-count ready" id="count-ready">0</span>
+            </div>
+            <div class="barista-queue" id="queue-ready"></div>
+          </div>
+          <div class="barista-col">
+            <div class="barista-col-header delivered">
+              <i class="fa-solid fa-circle-check"></i> Teslim Edildi
+              <span style="margin-left:auto;font-size:11px;color:var(--text3)" id="count-delivered">0</span>
+            </div>
+            <div class="barista-queue" id="queue-delivered"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── REPORTS VIEW ───────────────────────────────── -->
+    <div class="view" id="view-reports" style="display:none">
+      <div class="topbar">
+        <div class="topbar-left">
+          <div class="topbar-title">Raporlar</div>
+          <div class="topbar-meta clock-date"></div>
+        </div>
+        <div class="topbar-right">
+          <button class="topbar-btn accent-btn" id="pdfExportBtn" onclick="exportReportPDF()">
+            <i class="fa-solid fa-file-pdf"></i> PDF İndir
+          </button>
+        </div>
+      </div>
+      <!-- Sekme bar -->
+      <div class="report-tab-bar">
+        <button class="report-tab active" id="rtab-daily" onclick="switchReportTab('daily')">
+          <i class="fa-solid fa-calendar-day"></i> Günlük Rapor
+        </button>
+        <button class="report-tab" id="rtab-monthly" onclick="switchReportTab('monthly')">
+          <i class="fa-solid fa-calendar-alt"></i> Aylık Rapor
+        </button>
+      </div>
+
+      <!-- GÜNLÜK -->
+      <div class="reports-body" id="report-daily">
+        <div class="stat-cards" id="reportStats"></div>
+        <div class="charts-row">
+          <div class="chart-card">
+            <div class="chart-header">
+              <div class="chart-title">Saatlik Satış</div>
+              <div class="chart-sub">Bugün</div>
+            </div>
+            <div class="bar-chart" id="barChart"></div>
+          </div>
+          <div class="chart-card">
+            <div class="chart-header">
+              <div class="chart-title">Kategori Dağılımı</div>
+              <div class="chart-sub">Bugün</div>
+            </div>
+            <div class="donut-wrap" id="donutWrap"></div>
+          </div>
+        </div>
+        <div class="chart-card" style="margin-top:0">
+          <div class="chart-header">
+            <div class="chart-title">Tüm Siparişler</div>
+            <div class="chart-sub">Bugün</div>
+          </div>
+          <div class="order-history" id="orderHistory"></div>
+        </div>
+      </div>
+
+      <!-- AYLIK -->
+      <div class="reports-body" id="report-monthly" style="display:none">
+        <div class="stat-cards" id="monthlyStats"></div>
+        <div class="charts-row">
+          <div class="chart-card">
+            <div class="chart-header">
+              <div class="chart-title">Günlük Ciro</div>
+              <div class="chart-sub" id="monthlyChartSub">Bu Ay</div>
+            </div>
+            <div class="bar-chart" id="monthlyBarChart"></div>
+          </div>
+          <div class="chart-card">
+            <div class="chart-header">
+              <div class="chart-title">Kategori Dağılımı</div>
+              <div class="chart-sub">Bu Ay</div>
+            </div>
+            <div class="donut-wrap" id="monthlyDonutWrap"></div>
+          </div>
+        </div>
+        <div class="chart-card" style="margin-top:0">
+          <div class="chart-header">
+            <div class="chart-title">En Çok Satan Ürünler</div>
+            <div class="chart-sub">Bu Ay</div>
+          </div>
+          <div class="order-history" id="monthlyTopProducts"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── MENU MANAGE VIEW ───────────────────────────── -->
+    <div class="view" id="view-menu" style="display:none">
+      <div class="topbar">
+        <div class="topbar-left">
+          <div class="topbar-title">Menü Yönetimi</div>
+        </div>
+        <div class="topbar-right">
+          <button class="topbar-btn accent-btn" onclick="openAddProduct()">
+            <i class="fa-solid fa-plus"></i> Ürün Ekle
+          </button>
+        </div>
+      </div>
+      <div class="menu-manage-body">
+        <div class="mm-cat-list" id="mmCatList"></div>
+        <div class="mm-product-list" id="mmProductList"></div>
+      </div>
+    </div>
+
+    <!-- ── COUPON VIEW ────────────────────────────────── -->
+    <div class="view" id="view-coupons" style="display:none;flex-direction:column;">
+      <div class="topbar">
+        <div class="topbar-left">
+          <div class="topbar-title">Kupon Yönetimi</div>
+          <div class="topbar-meta">İndirim kuponlarını buradan yönetin</div>
+        </div>
+      </div>
+      <div class="coupon-body">
+        <!-- İstatistik kartları -->
+        <div class="coupon-stats" id="cpStats"></div>
+        <!-- Ana ızgara -->
+        <div class="coupon-main">
+          <!-- Sol: Form -->
+          <div class="cp-form-panel">
+            <div class="cp-panel-header">
+              <div class="cp-panel-icon"><i class="fa-solid fa-plus"></i></div>
+              <div>
+                <div class="cp-panel-title">Yeni Kupon Ekle</div>
+                <div class="cp-panel-sub">Kodu, türü ve koşulları belirleyin</div>
+              </div>
+            </div>
+            <div class="cp-form">
+              <div class="cp-field">
+                <div class="cp-label">Kupon Kodu <span class="required">*</span></div>
+                <input type="text" class="cp-input" id="cpCode" placeholder="YAZA20" maxlength="20"
+                  style="font-family:'Syne',sans-serif;font-weight:700;letter-spacing:2px;font-size:16px;text-transform:uppercase;"
+                  oninput="this.value=this.value.toUpperCase();updateCpPreview()">
+              </div>
+              <div class="cp-field">
+                <div class="cp-label">İndirim Türü <span class="required">*</span></div>
+                <div class="cp-type-select">
+                  <div class="cp-type-pill pct active" id="cpTypePct" onclick="setCpType('percent')">
+                    <i class="fa-solid fa-percent"></i>Yüzde (%)
+                  </div>
+                  <div class="cp-type-pill fixed" id="cpTypeFixed" onclick="setCpType('fixed')">
+                    <i class="fa-solid fa-turkish-lira-sign"></i>Sabit (₺)
+                  </div>
+                </div>
+                <input type="hidden" id="cpType" value="percent">
+              </div>
+              <div class="cp-input-row3">
+                <div class="cp-field">
+                  <div class="cp-label">Değer <span class="required">*</span></div>
+                  <input type="number" class="cp-input" id="cpValue" placeholder="20" min="0" oninput="updateCpPreview()">
+                </div>
+                <div class="cp-field">
+                  <div class="cp-label">Min. Sepet (₺)</div>
+                  <input type="number" class="cp-input" id="cpMin" placeholder="0" min="0">
+                </div>
+                <div class="cp-field">
+                  <div class="cp-label">Kullanım Limiti</div>
+                  <input type="number" class="cp-input" id="cpLimit" placeholder="∞" min="1">
+                </div>
+              </div>
+              <div class="cp-input-row2">
+                <div class="cp-field">
+                  <div class="cp-label">Açıklama</div>
+                  <input type="text" class="cp-input" id="cpDesc" placeholder="Yaz indirimi...">
+                </div>
+                <div class="cp-field">
+                  <div class="cp-label">Son Kullanma</div>
+                  <input type="date" class="cp-input" id="cpExpiry">
+                </div>
+              </div>
+              <div class="cp-preview">
+                <div class="cp-preview-badge" id="cpPreviewBadge">—</div>
+                <div class="cp-preview-info" id="cpPreviewInfo">Kod ve değer girerek önizleme görün.</div>
+              </div>
+              <button class="cp-add-btn" onclick="addCoupon()">
+                <i class="fa-solid fa-plus"></i> Kupon Ekle
+              </button>
+            </div>
+          </div>
+          <!-- Sağ: Liste -->
+          <div class="cp-list-panel">
+            <div class="cp-list-header">
+              <div class="cp-list-title">
+                Mevcut Kuponlar
+                <span class="cp-count-badge" id="cpCountBadge">0 kupon</span>
+              </div>
+              <div class="cp-filter-row">
+                <button class="cp-filter-btn active" id="filter-all" onclick="setCpFilter('all')">Tümü</button>
+                <button class="cp-filter-btn" id="filter-active" onclick="setCpFilter('active')">Aktif</button>
+                <button class="cp-filter-btn" id="filter-inactive" onclick="setCpFilter('inactive')">Pasif</button>
+              </div>
+            </div>
+            <div class="cp-list-body" id="couponListBody"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── SETTINGS VIEW ──────────────────────────────── -->
+    <div class="view" id="view-settings" style="display:none">
+      <div class="topbar">
+        <div class="topbar-left">
+          <div class="topbar-title">Ayarlar</div>
+          <div class="topbar-meta">Yönetici Paneli</div>
+        </div>
+      </div>
+      <div class="settings-body">
+
+        <!-- İşletme Bilgileri -->
+        <div class="settings-section">
+          <div class="settings-section-title"><i class="fa-solid fa-store"></i> İşletme Bilgileri</div>
+          <div class="settings-row">
+            <div style="flex:1">
+              <div class="settings-label">İşletme Adı</div>
+              <div class="settings-hint" id="bizNameDisplay">AURA Coffee &amp; Kitchen</div>
+            </div>
+            <button class="settings-edit-btn" onclick="openBizModal()">
+              <i class="fa-solid fa-pen"></i> Düzenle
+            </button>
+          </div>
+          <div class="settings-row">
+            <div style="flex:1">
+              <div class="settings-label">KDV Oranı</div>
+              <div class="settings-hint" id="taxRateDisplay">%8</div>
+            </div>
+            <button class="settings-edit-btn" onclick="openBizModal()">
+              <i class="fa-solid fa-pen"></i> Düzenle
+            </button>
+          </div>
+          <div class="settings-row">
+            <div style="flex:1">
+              <div class="settings-label">Para Birimi</div>
+              <div class="settings-hint">Türk Lirası (₺)</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Personel Yönetimi -->
+        <div class="settings-section">
+          <div class="settings-section-title" style="display:flex;align-items:center;justify-content:space-between;">
+            <span><i class="fa-solid fa-users"></i> Personel Yönetimi</span>
+            <button class="settings-add-btn" onclick="openStaffModal()">
+              <i class="fa-solid fa-plus"></i> Personel Ekle
+            </button>
+          </div>
+          <div id="staffList" style="display:flex;flex-direction:column;gap:8px;margin-top:4px;"></div>
+        </div>
+
+        <!-- Veri Yönetimi -->
+        <div class="settings-section">
+          <div class="settings-section-title"><i class="fa-solid fa-database"></i> Veri Yönetimi</div>
+          <div class="settings-row">
+            <div>
+              <div class="settings-label">Siparişleri Temizle</div>
+              <div class="settings-hint">Sadece sipariş geçmişi silinir, diğer veriler korunur</div>
+            </div>
+            <button class="settings-danger-btn"
+              onclick="if(confirm('Tüm sipariş geçmişi silinecek. Emin misiniz?')){DB.set(DB_KEYS.ORDERS,[]);showToast('Siparişler temizlendi','orange')}">
+              <i class="fa-solid fa-broom"></i> Temizle
+            </button>
+          </div>
+          <div class="settings-row">
+            <div>
+              <div class="settings-label">Hafızayı Sıfırla</div>
+              <div class="settings-hint">Tüm siparişler, kuponlar, menü ve ayarlar silinir</div>
+            </div>
+            <button class="settings-danger-btn" style="background:var(--red-bg);color:var(--red);border-color:rgba(224,85,117,0.3)"
+              onclick="if(confirm('TÜM VERİLER silinecek ve uygulama başa dönecek. Emin misiniz?')){localStorage.clear();location.reload()}">
+              <i class="fa-solid fa-trash"></i> Sıfırla
+            </button>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+  </div><!-- /views wrapper -->
+</div><!-- /appShell -->
+
+<!-- ══════════════════════════════════════════════════
+     MODALS
+══════════════════════════════════════════════════════ -->
+
+<!-- Sipariş Başarı Modalı -->
+<div class="modal-overlay" id="successModal">
+  <div class="modal success-modal">
+    <div class="success-anim">
+      <div class="success-ring"></div>
+      <div class="success-check">✓</div>
+    </div>
+    <div class="modal-title">Sipariş Onaylandı!</div>
+    <div class="success-order-num" id="successOrderNum">#41</div>
+    <div class="success-details" id="successDetails"></div>
+    <div style="display:flex;gap:10px;justify-content:center;">
+      <button class="modal-btn secondary" onclick="closeModal('successModal')">Kapat</button>
+      <button class="modal-btn accent" onclick="printReceipt()">
+        <i class="fa-solid fa-print"></i> Fiş Yazdır
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Ürün Ekle/Düzenle Modalı -->
+<div class="modal-overlay" id="addProductModal">
+  <div class="modal add-product-modal" style="max-width:500px;">
+    <div class="modal-header">
+      <div style="font-family:'Syne',sans-serif;font-size:16px;font-weight:700;" id="productModalTitle">Ürün Ekle</div>
+      <button class="modal-close" onclick="closeModal('addProductModal')"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    <div class="modal-body">
+      <div class="form-row">
+        <div class="form-group" style="max-width:80px;">
+          <div class="form-label">Emoji</div>
+          <input type="text" class="form-input" id="editEmoji" placeholder="☕" style="font-size:20px;text-align:center;">
+        </div>
+        <div class="form-group">
+          <div class="form-label">Ürün Adı *</div>
+          <input type="text" class="form-input" id="editName" placeholder="Espresso">
+        </div>
+      </div>
+      <div class="form-group">
+        <div class="form-label">Açıklama</div>
+        <input type="text" class="form-input" id="editDesc" placeholder="Kısa açıklama">
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <div class="form-label">Fiyat (₺) *</div>
+          <input type="number" class="form-input" id="editPrice" placeholder="0">
+        </div>
+        <div class="form-group">
+          <div class="form-label">Kategori *</div>
+          <select class="form-input" id="editCat"></select>
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px;">
+        <label class="toggle-switch">
+          <input type="checkbox" id="editPopular">
+          <span class="toggle-slider"></span>
+        </label>
+        <span style="font-size:13px;color:var(--text2);">Popüler olarak işaretle</span>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="modal-btn secondary" onclick="closeModal('addProductModal')">İptal</button>
+      <button class="modal-btn accent" onclick="saveProduct()">
+        <i class="fa-solid fa-check"></i> Kaydet
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Masa Detay Modalı -->
+<div class="modal-overlay" id="tableDetailModal">
+  <div class="modal" style="padding:0;max-width:480px;overflow:hidden;">
+    <div class="modal-header">
+      <div style="font-family:'Syne',sans-serif;font-size:16px;font-weight:700;" id="tableDetailTitle">Masa Detayı</div>
+      <button class="modal-close" onclick="closeModal('tableDetailModal')"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    <div id="tableDetailBody" style="display:flex;flex-direction:column;max-height:70vh;overflow-y:auto;"></div>
+  </div>
+</div>
+
+<!-- ══ PERSONEL EKLE / DÜZENLE MODALI ══════════════════ -->
+<div class="modal-overlay" id="staffModal">
+  <div class="modal" style="max-width:460px;padding:0;overflow:hidden;">
+    <div class="modal-header">
+      <div style="font-family:'Syne',sans-serif;font-size:16px;font-weight:700;" id="staffModalTitle">Personel Ekle</div>
+      <button class="modal-close" onclick="closeModal('staffModal')"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="editStaffId">
+      <div class="form-row">
+        <div class="form-group" style="max-width:80px;">
+          <div class="form-label">Baş Harf</div>
+          <input type="text" class="form-input" id="editStaffAvatar" placeholder="K" maxlength="2" style="text-align:center;font-size:20px;font-weight:700;text-transform:uppercase;">
+        </div>
+        <div class="form-group">
+          <div class="form-label">Ad Soyad *</div>
+          <input type="text" class="form-input" id="editStaffName" placeholder="Barista Efe" oninput="autoFillAvatar()">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <div class="form-label">Görev *</div>
+          <select class="form-input" id="editStaffRole">
+            <option value="waiter">Garson (Sadece Sipariş & Masalar)</option>
+            <option value="barista">Barista (Sipariş, Masalar & Barista)</option>
+            <option value="admin">Müdür (Tam Yetki)</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <div class="form-label">PIN (4 Hane) *</div>
+          <input type="text" class="form-input" id="editStaffPin" placeholder="0000" maxlength="4" inputmode="numeric" pattern="[0-9]{4}">
+        </div>
+      </div>
+      <div class="form-group">
+        <div class="form-label">Renk</div>
+        <div id="staffColorPicker" style="display:flex;gap:8px;flex-wrap:wrap;margin-top:4px;">
+          <button class="color-chip" style="background:#C8A96E" onclick="selectStaffColor('#C8A96E',this)"></button>
+          <button class="color-chip" style="background:#4CAF7A" onclick="selectStaffColor('#4CAF7A',this)"></button>
+          <button class="color-chip" style="background:#9B8FE0" onclick="selectStaffColor('#9B8FE0',this)"></button>
+          <button class="color-chip" style="background:#E05575" onclick="selectStaffColor('#E05575',this)"></button>
+          <button class="color-chip" style="background:#5B9CF6" onclick="selectStaffColor('#5B9CF6',this)"></button>
+          <button class="color-chip" style="background:#E89843" onclick="selectStaffColor('#E89843',this)"></button>
+          <button class="color-chip" style="background:#E2C48A" onclick="selectStaffColor('#E2C48A',this)"></button>
+          <button class="color-chip" style="background:#F06292" onclick="selectStaffColor('#F06292',this)"></button>
+        </div>
+        <input type="hidden" id="editStaffColor" value="#C8A96E">
+      </div>
+      <div id="staffPinConflict" style="display:none;color:var(--red);font-size:12px;margin-top:8px;padding:8px 12px;background:var(--red-bg);border-radius:var(--r-sm);">
+        <i class="fa-solid fa-triangle-exclamation"></i> Bu PIN başka bir personel tarafından kullanılıyor!
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="modal-btn secondary" onclick="closeModal('staffModal')">İptal</button>
+      <button class="modal-btn accent" onclick="saveStaff()">
+        <i class="fa-solid fa-check"></i> Kaydet
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ İŞLETME BİLGİLERİ MODALI ══════════════════════ -->
+<div class="modal-overlay" id="bizModal">
+  <div class="modal" style="max-width:420px;padding:0;overflow:hidden;">
+    <div class="modal-header">
+      <div style="font-family:'Syne',sans-serif;font-size:16px;font-weight:700;">İşletme Bilgileri</div>
+      <button class="modal-close" onclick="closeModal('bizModal')"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <div class="form-label">İşletme Adı</div>
+        <input type="text" class="form-input" id="editBizName" placeholder="AURA Coffee &amp; Kitchen">
+      </div>
+      <div class="form-group">
+        <div class="form-label">KDV Oranı (%)</div>
+        <input type="number" class="form-input" id="editTaxRate" placeholder="8" min="0" max="100">
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="modal-btn secondary" onclick="closeModal('bizModal')">İptal</button>
+      <button class="modal-btn accent" onclick="saveBizSettings()">
+        <i class="fa-solid fa-check"></i> Kaydet
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast">
+  <div class="toast-dot" id="toastDot"></div>
+  <span id="toastMsg"></span>
+</div>
+
+<!-- ══ GİZLİ YAZICI ŞABLONu ══════════════════════════ -->
+<div id="printContainer" style="display:none;"></div>
+
+<!-- SCRIPTS (sıralı yükleme önemli!) -->
+<script src="db.js"></script>
+<script src="script.js"></script>
+
+</body>
+</html>
