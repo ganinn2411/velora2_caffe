@@ -19,12 +19,12 @@
 ═══════════════════════════════════════════════ */
 
 const FIREBASE_CONFIG = {
-  apiKey: "BURAYA_API_KEY",
-  authDomain: "BURAYA_PROJE.firebaseapp.com",
-  projectId: "BURAYA_PROJE_ID",
-  storageBucket: "BURAYA_PROJE.appspot.com",
-  messagingSenderId: "BURAYA_SENDER_ID",
-  appId: "BURAYA_APP_ID",
+  apiKey: "AIzaSyC6MaQnrlBuINhqowrcxQ1IfSQwtp7PqnQ",
+  authDomain: "veloracaffe2.firebaseapp.com",
+  projectId: "veloracaffe2",
+  storageBucket: "veloracaffe2.firebasestorage.app",
+  messagingSenderId: "196549083369",
+  appId: "1:196549083369:web:f9d6c12a89dc871f667078"
 };
 
 /* ═══════════════════════════════════════════════
