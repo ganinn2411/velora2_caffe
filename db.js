@@ -52,6 +52,12 @@ Object.values(DB_KEYS).forEach(k => { _cache[k] = _loadFromLocalStorage(k); });
 /* ── Hazır olma durumu ─────────────────────────────────
    İlk bulut verisi gelene kadar (ya da bağlantı hatası
    alınana kadar) bekletmek için kullanılır. */
+/* ── Bağlantı durumu (DevTools'suz teşhis için) ────────
+   window.AURA_CLOUD_STATUS her zaman güncel tutulur:
+   "connecting" | "connected" | "offline" | "error"      */
+window.AURA_CLOUD_STATUS = "connecting";
+window.AURA_CLOUD_STATUS_DETAIL = "";
+
 let _ready = false;
 let _readyWaiters = [];
 function _markReady() {
@@ -70,6 +76,8 @@ let _cloudEnabled = false;
 (function initCloud() {
   if (typeof firebase === "undefined" || typeof FIREBASE_CONFIG === "undefined") {
     console.warn("Firebase bulunamadı, sadece bu cihazda (localStorage) çalışılıyor.");
+    window.AURA_CLOUD_STATUS = "offline";
+    window.AURA_CLOUD_STATUS_DETAIL = "Firebase SDK veya config dosyası yüklenmedi.";
     _markReady();
     return;
   }
@@ -91,6 +99,8 @@ let _cloudEnabled = false;
             changed = true;
           }
         });
+        window.AURA_CLOUD_STATUS = "connected";
+        window.AURA_CLOUD_STATUS_DETAIL = "";
         _markReady();
         if (changed && typeof window.onCloudDataChanged === "function") {
           window.onCloudDataChanged();
@@ -99,11 +109,15 @@ let _cloudEnabled = false;
       err => {
         console.error("Firestore bağlantı hatası, localStorage ile devam ediliyor:", err);
         _cloudEnabled = false;
+        window.AURA_CLOUD_STATUS = "error";
+        window.AURA_CLOUD_STATUS_DETAIL = (err && err.code) ? err.code : String(err);
         _markReady();
       }
     );
   } catch (e) {
     console.error("Firebase başlatılamadı, localStorage ile devam ediliyor:", e);
+    window.AURA_CLOUD_STATUS = "error";
+    window.AURA_CLOUD_STATUS_DETAIL = (e && e.message) ? e.message : String(e);
     _markReady();
   }
 })();
@@ -117,7 +131,16 @@ function _scheduleCloudWrite(key, value) {
   clearTimeout(_writeTimers[key]);
   _writeTimers[key] = setTimeout(() => {
     _cloudDoc.set({ [key]: value }, { merge: true })
-      .catch(e => console.error("Buluta yazma hatası:", e));
+      .then(() => {
+        window.AURA_LAST_WRITE_OK = true;
+        if (typeof window.onCloudWriteResult === "function") window.onCloudWriteResult(true, null);
+      })
+      .catch(e => {
+        console.error("Buluta yazma hatası:", e);
+        window.AURA_LAST_WRITE_OK = false;
+        window.AURA_LAST_WRITE_ERROR = (e && e.code) ? e.code : String(e);
+        if (typeof window.onCloudWriteResult === "function") window.onCloudWriteResult(false, window.AURA_LAST_WRITE_ERROR);
+      });
   }, 250);
 }
 
