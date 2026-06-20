@@ -18,6 +18,7 @@ let cpCurrentFilter = "all";
 let currentMenuCat  = "";
 let selectedUserId  = null;
 let tableDetailPayment = "cash"; // masa kapatma modalındaki ödeme seçimi
+let currentView    = "pos";      // o anda ekranda gösterilen view (bulut güncellemesi için)
 
 /* ── PARA FORMATLAMA (TR) ──────────────────────────── */
 function formatMoney(n) {
@@ -30,26 +31,48 @@ function paymentMethodLabel(o) {
 
 /* ── BOOT ──────────────────────────────────────────── */
 document.addEventListener("DOMContentLoaded", () => {
-  seedIfEmpty();
-  applyBizBranding();
-  updateClock();
-  setInterval(updateClock, 1000);
+  // Bulut verisi (varsa) gelene kadar bekle, sonra başlat.
+  // Böylece bu cihazda eski/varsayılan veri yerine diğer
+  // cihazlardaki güncel veriler gösterilir.
+  DB.ready().then(() => {
+    seedIfEmpty();
+    applyBizBranding();
+    updateClock();
+    setInterval(updateClock, 1000);
 
-  // Modal dışı tıkla kapat
-  document.querySelectorAll(".modal-overlay").forEach(el => {
-    el.addEventListener("click", e => {
-      if (e.target === el) closeModal(el.id);
+    // Modal dışı tıkla kapat
+    document.querySelectorAll(".modal-overlay").forEach(el => {
+      el.addEventListener("click", e => {
+        if (e.target === el) closeModal(el.id);
+      });
     });
-  });
 
-  // Önceki oturum
-  const saved = SessionDB.getUser();
-  if (saved) {
-    loginUser(saved);
-  } else {
-    showLockScreen();
-  }
+    // Önceki oturum
+    const saved = SessionDB.getUser();
+    if (saved) {
+      loginUser(saved);
+    } else {
+      showLockScreen();
+    }
+  });
 });
+
+/* ── BULUTTAN CANLI GÜNCELLEME ───────────────────────
+   Başka bir cihaz veri değiştirdiğinde (örn. yeni sipariş,
+   menü güncellemesi) buradaki fonksiyon tetiklenir ve o anda
+   ekranda görünen view yeniden çizilir. */
+function refreshCurrentViewFromCloud() {
+  const shell = document.getElementById("appShell");
+  if (!shell || shell.style.display === "none") return; // henüz giriş yapılmadı
+  if (currentView === "pos")      renderPos();
+  if (currentView === "tables")   renderTables();
+  if (currentView === "barista")  renderBarista();
+  if (currentView === "reports")  renderReports();
+  if (currentView === "menu")     renderMenuManage();
+  if (currentView === "coupons")  renderCoupons();
+  if (currentView === "settings") renderSettings();
+}
+window.onCloudDataChanged = refreshCurrentViewFromCloud;
 
 /* ── CLOCK ─────────────────────────────────────────── */
 function updateClock() {
@@ -219,6 +242,7 @@ function switchView(v) {
     const nb = document.getElementById("nav-" + name);
     if (nb) nb.classList.toggle("active", name === v);
   });
+  currentView = v;
 
   if (v === "pos")      { renderPos(); }
   if (v === "tables")   { renderTables(); }
