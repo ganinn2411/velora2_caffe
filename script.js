@@ -54,8 +54,26 @@ document.addEventListener("DOMContentLoaded", () => {
     } else {
       showLockScreen();
     }
+
+    // Bulut bağlantı durumunu göster (DevTools'a girmeden anlamak için)
+    setTimeout(() => {
+      if (window.AURA_CLOUD_STATUS === "connected") {
+        showToast("Bulut bağlantısı aktif ✓ — veriler tüm cihazlarda senkron", "green");
+      } else if (window.AURA_CLOUD_STATUS === "offline") {
+        showToast("Bulut bağlı değil — sadece bu cihazda çalışıyor (" + (window.AURA_CLOUD_STATUS_DETAIL||"") + ")", "red");
+      } else if (window.AURA_CLOUD_STATUS === "error") {
+        showToast("Bulut bağlantı hatası: " + (window.AURA_CLOUD_STATUS_DETAIL||"bilinmeyen hata"), "red");
+      }
+    }, 600);
   });
 });
+
+// Bir veri buluta yazılamadığında kullanıcıyı uyar
+window.onCloudWriteResult = function(success, errorCode) {
+  if (!success) {
+    showToast("⚠️ Değişiklik buluta kaydedilemedi (" + errorCode + "). Sadece bu cihazda kaydedildi.", "red");
+  }
+};
 
 /* ── BULUTTAN CANLI GÜNCELLEME ───────────────────────
    Başka bir cihaz veri değiştirdiğinde (örn. yeni sipariş,
