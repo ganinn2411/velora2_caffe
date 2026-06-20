@@ -2,7 +2,20 @@
 
 /* ═══════════════════════════════════════════════
    AURA Coffee & Kitchen — db.js
-   LocalStorage veri katmanı
+   Firebase Firestore ile gerçek zamanlı senkron veri katmanı.
+
+   Nasıl çalışır?
+   - Tüm veriler (kullanıcılar, menü, masalar, siparişler, kuponlar,
+     ayarlar) Firestore'da TEK bir dokümanda saklanır.
+   - Her cihaz açıldığında o dokümana "canlı dinleyici" (onSnapshot)
+     bağlar. Herhangi bir cihaz veri değiştirdiğinde, TÜM cihazlar
+     anında günceller.
+   - script.js eskisi gibi senkron (await'siz) DB.get()/DB.set()
+     çağırabilsin diye, bulut verisi bellek içi bir "_cache"
+     nesnesinde tutulur. localStorage artık sadece "ilk açılışta
+     hızlı yükleme + internet yokken yedek" amacıyla kullanılır.
+   - SESSION (kim giriş yapmış) bilgisi bilerek cihaza özel
+     bırakıldı; her cihazda kendi oturumu olmalı.
 ═══════════════════════════════════════════════ */
 
 const DB_KEYS = {
@@ -11,20 +24,124 @@ const DB_KEYS = {
   TABLES:   "aura_tables",
   ORDERS:   "aura_orders",
   SETTINGS: "aura_settings",
-  SESSION:  "aura_session",
+  SESSION:  "aura_session",   // cihaza özel — buluta senkron edilmez
   COUPONS:  "aura_coupons",
 };
 
+// Bulutla senkronlanacak alanlar (SESSION hariç)
+const SYNCED_KEYS = [
+  DB_KEYS.USERS, DB_KEYS.MENU, DB_KEYS.TABLES,
+  DB_KEYS.ORDERS, DB_KEYS.SETTINGS, DB_KEYS.COUPONS,
+];
+
+/* ── Bellek içi önbellek (senkron okuma için) ─────────── */
+const _cache = {};
+
+function _loadFromLocalStorage(key) {
+  try {
+    const r = localStorage.getItem(key);
+    return r ? JSON.parse(r) : null;
+  } catch { return null; }
+}
+function _saveToLocalStorage(key, value) {
+  try { localStorage.setItem(key, JSON.stringify(value)); } catch {}
+}
+
+Object.values(DB_KEYS).forEach(k => { _cache[k] = _loadFromLocalStorage(k); });
+
+/* ── Hazır olma durumu ─────────────────────────────────
+   İlk bulut verisi gelene kadar (ya da bağlantı hatası
+   alınana kadar) bekletmek için kullanılır. */
+let _ready = false;
+let _readyWaiters = [];
+function _markReady() {
+  if (_ready) return;
+  _ready = true;
+  _readyWaiters.forEach(fn => fn());
+  _readyWaiters = [];
+}
+
+/* ── Firestore bağlantısı ──────────────────────────────
+   firebase-config.js içindeki FIREBASE_CONFIG kullanılır.
+   index.html sırası: firebase SDK -> firebase-config.js -> db.js  */
+let _cloudDoc = null;
+let _cloudEnabled = false;
+
+(function initCloud() {
+  if (typeof firebase === "undefined" || typeof FIREBASE_CONFIG === "undefined") {
+    console.warn("Firebase bulunamadı, sadece bu cihazda (localStorage) çalışılıyor.");
+    _markReady();
+    return;
+  }
+  try {
+    if (!firebase.apps.length) firebase.initializeApp(FIREBASE_CONFIG);
+    const fdb = firebase.firestore();
+    _cloudDoc = fdb.collection("aura_pos").doc("shared_state");
+    _cloudEnabled = true;
+
+    _cloudDoc.onSnapshot(
+      snap => {
+        const data = snap.exists ? (snap.data() || {}) : {};
+        let changed = false;
+        SYNCED_KEYS.forEach(k => {
+          const incoming = Object.prototype.hasOwnProperty.call(data, k) ? data[k] : null;
+          if (JSON.stringify(_cache[k]) !== JSON.stringify(incoming)) {
+            _cache[k] = incoming;
+            _saveToLocalStorage(k, incoming);
+            changed = true;
+          }
+        });
+        _markReady();
+        if (changed && typeof window.onCloudDataChanged === "function") {
+          window.onCloudDataChanged();
+        }
+      },
+      err => {
+        console.error("Firestore bağlantı hatası, localStorage ile devam ediliyor:", err);
+        _cloudEnabled = false;
+        _markReady();
+      }
+    );
+  } catch (e) {
+    console.error("Firebase başlatılamadı, localStorage ile devam ediliyor:", e);
+    _markReady();
+  }
+})();
+
+/* Buluta yazma — hızlı ardışık değişiklikleri (örn. sepete art arda
+   ürün ekleme) tek bir ağ isteğinde birleştirmek için kısa bir
+   gecikmeyle (debounce) yazılır. */
+let _writeTimers = {};
+function _scheduleCloudWrite(key, value) {
+  if (!_cloudEnabled || !_cloudDoc) return;
+  clearTimeout(_writeTimers[key]);
+  _writeTimers[key] = setTimeout(() => {
+    _cloudDoc.set({ [key]: value }, { merge: true })
+      .catch(e => console.error("Buluta yazma hatası:", e));
+  }, 250);
+}
+
 const DB = {
-  get(key) {
-    try { const r = localStorage.getItem(key); return r ? JSON.parse(r) : null; }
-    catch { return null; }
-  },
+  get(key) { return _cache[key] !== undefined ? _cache[key] : null; },
   set(key, value) {
-    try { localStorage.setItem(key, JSON.stringify(value)); return true; }
-    catch { return false; }
+    _cache[key] = value;
+    _saveToLocalStorage(key, value);
+    if (SYNCED_KEYS.includes(key)) _scheduleCloudWrite(key, value);
+    return true;
   },
-  remove(key) { localStorage.removeItem(key); },
+  remove(key) {
+    _cache[key] = null;
+    localStorage.removeItem(key);
+    if (SYNCED_KEYS.includes(key)) _scheduleCloudWrite(key, null);
+  },
+  /* İlk bulut senkronu tamamlanana kadar beklemek için.
+     script.js boot sırasında bunu kullanır. */
+  ready() {
+    return new Promise(resolve => {
+      if (_ready) resolve();
+      else _readyWaiters.push(resolve);
+    });
+  },
 };
 
 function seedIfEmpty() {
@@ -84,14 +201,7 @@ function seedIfEmpty() {
 
   if (!DB.get(DB_KEYS.ORDERS))   DB.set(DB_KEYS.ORDERS, []);
   if (!DB.get(DB_KEYS.COUPONS))  DB.set(DB_KEYS.COUPONS, []);
-  // Settings yoksa oluştur; varsa orderCounter'ı her zaman 0'dan başlat
-  const _s = DB.get(DB_KEYS.SETTINGS);
-  if (!_s) {
-    DB.set(DB_KEYS.SETTINGS, { orderCounter:0, taxRate:8 });
-  } else {
-    _s.orderCounter = 0;
-    DB.set(DB_KEYS.SETTINGS, _s);
-  }
+  if (!DB.get(DB_KEYS.SETTINGS)) DB.set(DB_KEYS.SETTINGS, { orderCounter:0, taxRate:8 });
 }
 
 /* ── USER DB ──────────────────────────────────── */
@@ -105,7 +215,7 @@ const UserDB = {
   },
 };
 
-/* ── SESSION DB ───────────────────────────────── */
+/* ── SESSION DB (cihaza özel) ─────────────────── */
 const SessionDB = {
   get()     { return DB.get(DB_KEYS.SESSION); },
   set(user) { DB.set(DB_KEYS.SESSION, { userId: user.id, loginTime: Date.now() }); },
