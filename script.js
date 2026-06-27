@@ -1016,29 +1016,65 @@ function renderDailyReport() {
   const statCards = document.getElementById("reportStats");
   if (statCards) {
     statCards.innerHTML = `
-      <div class="stat-card">
-        <div class="stat-icon" style="background:var(--accent-bg);color:var(--accent)"><i class="fa-solid fa-turkish-lira-sign"></i></div>
-        <div class="stat-info"><div class="stat-label">Günlük Ciro</div><div class="stat-val">${formatMoney(total)}</div></div>
+      <div class="stat-card" style="--card-accent:var(--accent)">
+        <div class="stat-card-top">
+          <div class="stat-icon" style="background:var(--accent-bg);color:var(--accent)"><i class="fa-solid fa-turkish-lira-sign"></i></div>
+          <div class="stat-trend">Bugün</div>
+        </div>
+        <div class="stat-info">
+          <div class="stat-label">Günlük Ciro</div>
+          <div class="stat-val">${formatMoney(total)}</div>
+        </div>
       </div>
-      <div class="stat-card">
-        <div class="stat-icon" style="background:var(--blue-bg);color:var(--blue)"><i class="fa-solid fa-receipt"></i></div>
-        <div class="stat-info"><div class="stat-label">Ödenen Sipariş</div><div class="stat-val">${count}</div></div>
+      <div class="stat-card" style="--card-accent:var(--blue)">
+        <div class="stat-card-top">
+          <div class="stat-icon" style="background:var(--blue-bg);color:var(--blue)"><i class="fa-solid fa-receipt"></i></div>
+          <div class="stat-trend">İşlem</div>
+        </div>
+        <div class="stat-info">
+          <div class="stat-label">Ödenen Sipariş</div>
+          <div class="stat-val">${count}</div>
+        </div>
       </div>
-      <div class="stat-card">
-        <div class="stat-icon" style="background:var(--green-bg);color:var(--green)"><i class="fa-solid fa-chart-bar"></i></div>
-        <div class="stat-info"><div class="stat-label">Ort. Sepet</div><div class="stat-val">${formatMoney(avg)}</div></div>
+      <div class="stat-card" style="--card-accent:var(--green)">
+        <div class="stat-card-top">
+          <div class="stat-icon" style="background:var(--green-bg);color:var(--green)"><i class="fa-solid fa-chart-bar"></i></div>
+          <div class="stat-trend">Ortalama</div>
+        </div>
+        <div class="stat-info">
+          <div class="stat-label">Ort. Sepet</div>
+          <div class="stat-val">${formatMoney(avg)}</div>
+        </div>
       </div>
-      <div class="stat-card">
-        <div class="stat-icon" style="background:var(--orange-bg);color:var(--orange)"><i class="fa-solid fa-clock"></i></div>
-        <div class="stat-info"><div class="stat-label">Açık Hesap</div><div class="stat-val">${openCount}</div></div>
+      <div class="stat-card" style="--card-accent:var(--orange)">
+        <div class="stat-card-top">
+          <div class="stat-icon" style="background:var(--orange-bg);color:var(--orange)"><i class="fa-solid fa-clock"></i></div>
+          <div class="stat-trend">Açık</div>
+        </div>
+        <div class="stat-info">
+          <div class="stat-label">Açık Hesap</div>
+          <div class="stat-val">${openCount}</div>
+        </div>
       </div>
-      <div class="stat-card">
-        <div class="stat-icon" style="background:var(--green-bg);color:var(--green)"><i class="fa-solid fa-money-bill-wave"></i></div>
-        <div class="stat-info"><div class="stat-label">Nakit</div><div class="stat-val">${formatMoney(cashTotal)}</div></div>
+      <div class="stat-card" style="--card-accent:var(--green)">
+        <div class="stat-card-top">
+          <div class="stat-icon" style="background:var(--green-bg);color:var(--green)"><i class="fa-solid fa-money-bill-wave"></i></div>
+          <div class="stat-trend">Nakit</div>
+        </div>
+        <div class="stat-info">
+          <div class="stat-label">Nakit Tahsilat</div>
+          <div class="stat-val">${formatMoney(cashTotal)}</div>
+        </div>
       </div>
-      <div class="stat-card">
-        <div class="stat-icon" style="background:var(--purple-bg);color:var(--purple)"><i class="fa-solid fa-credit-card"></i></div>
-        <div class="stat-info"><div class="stat-label">Kart</div><div class="stat-val">${formatMoney(cardTotal)}</div></div>
+      <div class="stat-card" style="--card-accent:var(--purple)">
+        <div class="stat-card-top">
+          <div class="stat-icon" style="background:var(--purple-bg);color:var(--purple)"><i class="fa-solid fa-credit-card"></i></div>
+          <div class="stat-trend">Kart</div>
+        </div>
+        <div class="stat-info">
+          <div class="stat-label">Kart Tahsilat</div>
+          <div class="stat-val">${formatMoney(cardTotal)}</div>
+        </div>
       </div>
     `;
   }
@@ -1075,29 +1111,65 @@ function renderMonthlyReport() {
   const statCards = document.getElementById("monthlyStats");
   if (statCards) {
     statCards.innerHTML = `
-      <div class="stat-card">
-        <div class="stat-icon" style="background:var(--accent-bg);color:var(--accent)"><i class="fa-solid fa-turkish-lira-sign"></i></div>
-        <div class="stat-info"><div class="stat-label">Aylık Ciro</div><div class="stat-val">${formatMoney(total)}</div></div>
+      <div class="stat-card" style="--card-accent:var(--accent)">
+        <div class="stat-card-top">
+          <div class="stat-icon" style="background:var(--accent-bg);color:var(--accent)"><i class="fa-solid fa-turkish-lira-sign"></i></div>
+          <div class="stat-trend">Bu Ay</div>
+        </div>
+        <div class="stat-info">
+          <div class="stat-label">Aylık Ciro</div>
+          <div class="stat-val">${formatMoney(total)}</div>
+        </div>
       </div>
-      <div class="stat-card">
-        <div class="stat-icon" style="background:var(--blue-bg);color:var(--blue)"><i class="fa-solid fa-receipt"></i></div>
-        <div class="stat-info"><div class="stat-label">Toplam Sipariş</div><div class="stat-val">${count}</div></div>
+      <div class="stat-card" style="--card-accent:var(--blue)">
+        <div class="stat-card-top">
+          <div class="stat-icon" style="background:var(--blue-bg);color:var(--blue)"><i class="fa-solid fa-receipt"></i></div>
+          <div class="stat-trend">İşlem</div>
+        </div>
+        <div class="stat-info">
+          <div class="stat-label">Toplam Sipariş</div>
+          <div class="stat-val">${count}</div>
+        </div>
       </div>
-      <div class="stat-card">
-        <div class="stat-icon" style="background:var(--green-bg);color:var(--green)"><i class="fa-solid fa-chart-bar"></i></div>
-        <div class="stat-info"><div class="stat-label">Ort. Sepet</div><div class="stat-val">${formatMoney(avg)}</div></div>
+      <div class="stat-card" style="--card-accent:var(--green)">
+        <div class="stat-card-top">
+          <div class="stat-icon" style="background:var(--green-bg);color:var(--green)"><i class="fa-solid fa-chart-bar"></i></div>
+          <div class="stat-trend">Ortalama</div>
+        </div>
+        <div class="stat-info">
+          <div class="stat-label">Ort. Sepet</div>
+          <div class="stat-val">${formatMoney(avg)}</div>
+        </div>
       </div>
-      <div class="stat-card">
-        <div class="stat-icon" style="background:var(--orange-bg);color:var(--orange)"><i class="fa-solid fa-calendar-check"></i></div>
-        <div class="stat-info"><div class="stat-label">Aktif Gün</div><div class="stat-val">${activeDays} / ${daysInMonth}</div></div>
+      <div class="stat-card" style="--card-accent:var(--orange)">
+        <div class="stat-card-top">
+          <div class="stat-icon" style="background:var(--orange-bg);color:var(--orange)"><i class="fa-solid fa-calendar-check"></i></div>
+          <div class="stat-trend">${daysInMonth} gün</div>
+        </div>
+        <div class="stat-info">
+          <div class="stat-label">Aktif Gün</div>
+          <div class="stat-val">${activeDays} <span style="font-size:14px;color:var(--text3)">/ ${daysInMonth}</span></div>
+        </div>
       </div>
-      <div class="stat-card">
-        <div class="stat-icon" style="background:var(--green-bg);color:var(--green)"><i class="fa-solid fa-money-bill-wave"></i></div>
-        <div class="stat-info"><div class="stat-label">Nakit</div><div class="stat-val">${formatMoney(cashTotal)}</div></div>
+      <div class="stat-card" style="--card-accent:var(--green)">
+        <div class="stat-card-top">
+          <div class="stat-icon" style="background:var(--green-bg);color:var(--green)"><i class="fa-solid fa-money-bill-wave"></i></div>
+          <div class="stat-trend">Nakit</div>
+        </div>
+        <div class="stat-info">
+          <div class="stat-label">Nakit Tahsilat</div>
+          <div class="stat-val">${formatMoney(cashTotal)}</div>
+        </div>
       </div>
-      <div class="stat-card">
-        <div class="stat-icon" style="background:var(--purple-bg);color:var(--purple)"><i class="fa-solid fa-credit-card"></i></div>
-        <div class="stat-info"><div class="stat-label">Kart</div><div class="stat-val">${formatMoney(cardTotal)}</div></div>
+      <div class="stat-card" style="--card-accent:var(--purple)">
+        <div class="stat-card-top">
+          <div class="stat-icon" style="background:var(--purple-bg);color:var(--purple)"><i class="fa-solid fa-credit-card"></i></div>
+          <div class="stat-trend">Kart</div>
+        </div>
+        <div class="stat-info">
+          <div class="stat-label">Kart Tahsilat</div>
+          <div class="stat-val">${formatMoney(cardTotal)}</div>
+        </div>
       </div>
     `;
   }
