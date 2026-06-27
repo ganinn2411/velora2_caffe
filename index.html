@@ -6,8 +6,10 @@
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="VELORA POS">
   <meta name="theme-color" content="#080808">
-  <title>AURA Coffee & Kitchen — POS</title>
+  <meta name="description" content="VELORA Coffee & Kitchen için sipariş, masa, barista ve raporlama POS sistemi.">
+  <title>VELORA Coffee</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
@@ -23,9 +25,9 @@
   <div class="lock-bg-orb lock-orb1"></div>
   <div class="lock-bg-orb lock-orb2"></div>
   <div class="lock-card">
-    <div class="lock-logo"><span class="lock-logo-letter">A</span></div>
-    <div class="lock-title">AURA</div>
-    <div class="lock-subtitle">Coffee &amp; Kitchen POS</div>
+    <div class="lock-logo"><span class="lock-logo-letter">V</span></div>
+    <div class="lock-title">VELORA</div>
+    <div class="lock-subtitle">Coffee &amp;</div>
     <p style="font-size:10px;color:var(--text3);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:14px;">Personeli Seçin</p>
     <div class="staff-grid" id="staffGrid">
       <!-- JS ile doldurulur -->
@@ -77,7 +79,7 @@
 
   <!-- SIDEBAR -->
   <aside class="sidebar">
-    <div class="sidebar-logo">A</div>
+    <div class="sidebar-logo">V</div>
     <nav class="sidebar-nav">
       <button class="nav-btn active" id="nav-pos" onclick="switchView('pos')">
         <i class="fa-solid fa-cash-register"></i>
@@ -328,23 +330,32 @@
         <div class="charts-row">
           <div class="chart-card">
             <div class="chart-header">
-              <div class="chart-title">Saatlik Satış</div>
-              <div class="chart-sub">Bugün</div>
+              <div class="chart-title-group">
+                <div class="chart-title">Saatlik Satış</div>
+                <div class="chart-sub">Bugünkü satış dağılımı</div>
+              </div>
+              <div class="chart-badge">Bugün</div>
             </div>
             <div class="bar-chart" id="barChart"></div>
           </div>
           <div class="chart-card">
             <div class="chart-header">
-              <div class="chart-title">Kategori Dağılımı</div>
-              <div class="chart-sub">Bugün</div>
+              <div class="chart-title-group">
+                <div class="chart-title">Kategori Dağılımı</div>
+                <div class="chart-sub">Satış oranları</div>
+              </div>
+              <div class="chart-badge">Bugün</div>
             </div>
             <div class="donut-wrap" id="donutWrap"></div>
           </div>
         </div>
-        <div class="chart-card" style="margin-top:0">
+        <div class="chart-card">
           <div class="chart-header">
-            <div class="chart-title">Tüm Siparişler</div>
-            <div class="chart-sub">Bugün</div>
+            <div class="chart-title-group">
+              <div class="chart-title">Tüm Siparişler</div>
+              <div class="chart-sub">Bugünkü sipariş geçmişi</div>
+            </div>
+            <div class="chart-badge">Bugün</div>
           </div>
           <div class="order-history" id="orderHistory"></div>
         </div>
@@ -356,23 +367,32 @@
         <div class="charts-row">
           <div class="chart-card">
             <div class="chart-header">
-              <div class="chart-title">Günlük Ciro</div>
-              <div class="chart-sub" id="monthlyChartSub">Bu Ay</div>
+              <div class="chart-title-group">
+                <div class="chart-title">Günlük Ciro</div>
+                <div class="chart-sub" id="monthlyChartSub">Bu Ay</div>
+              </div>
+              <div class="chart-badge">Aylık</div>
             </div>
             <div class="bar-chart" id="monthlyBarChart"></div>
           </div>
           <div class="chart-card">
             <div class="chart-header">
-              <div class="chart-title">Kategori Dağılımı</div>
-              <div class="chart-sub">Bu Ay</div>
+              <div class="chart-title-group">
+                <div class="chart-title">Kategori Dağılımı</div>
+                <div class="chart-sub">Aylık satış oranları</div>
+              </div>
+              <div class="chart-badge">Bu Ay</div>
             </div>
             <div class="donut-wrap" id="monthlyDonutWrap"></div>
           </div>
         </div>
-        <div class="chart-card" style="margin-top:0">
+        <div class="chart-card">
           <div class="chart-header">
-            <div class="chart-title">En Çok Satan Ürünler</div>
-            <div class="chart-sub">Bu Ay</div>
+            <div class="chart-title-group">
+              <div class="chart-title">En Çok Satan Ürünler</div>
+              <div class="chart-sub">Bu ayki performans</div>
+            </div>
+            <div class="chart-badge">Bu Ay</div>
           </div>
           <div class="order-history" id="monthlyTopProducts"></div>
         </div>
