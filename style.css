@@ -156,7 +156,7 @@ button:focus-visible, .nav-btn:focus-visible, .product-card:focus-visible { outl
 .pin-del:hover { color:var(--red); }
 
 /* ══ APP SHELL ════════════════════════════════════════ */
-.app { display:flex; width:100vw; height:100vh; height:100dvh; height:calc(var(--vh, 1vh) * 100); overflow:hidden; animation:fadeIn .3s ease; }
+.app { display:flex; width:100vw; height:100vh; height:100dvh; overflow:hidden; animation:fadeIn .3s ease; }
 
 /* ══ SIDEBAR ══════════════════════════════════════════ */
 .sidebar {
@@ -1189,38 +1189,14 @@ select.form-input option { background:var(--bg3); }
     gap: 2px;
   }
   .nav-btn .nav-label { display: block; font-size: 8px; }
-  /* Mobilde Ayarlar da alt menüde görünür. Personel ve Çıkış gizlenir. */
   .sidebar-bottom {
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    justify-content: center;
-    flex: 0 0 58px;
-    width: 58px;
-    height: 100%;
-    padding: 0;
-    border: 0;
-    border-left: 1px solid var(--bg4);
-    gap: 0;
-  }
-
-  .sidebar-bottom #nav-settings {
-    display: flex;
-    width: 50px;
-    height: 50px;
-    aspect-ratio: auto;
-    border-radius: var(--r-sm);
-  }
-
-  .sidebar-bottom .staff-pill,
-  .sidebar-bottom > .nav-btn[onclick="logout()"] {
-    display: none !important;
+    display: none; /* Bottom nav'da logout, settings sidebar'dan gelecek */
   }
 
   /* Views wrapper tam yükseklik eksi bottom nav */
   .app > div[style*="flex:1"] {
     order: 1;
-    height: calc(var(--vh, 1vh) * 100 - var(--bottom-nav-h));
+    height: calc(100vh - var(--bottom-nav-h));
     padding-bottom: 0;
   }
 
@@ -1233,7 +1209,7 @@ select.form-input option { background:var(--bg3); }
 
   /* Sabit bottom nav için içerik alanını pad et */
   .view { padding-bottom: 0; }
-  .pos-body { height: calc(var(--vh, 1vh) * 100 - var(--bottom-nav-h) - var(--topbar-h)); }
+  .pos-body { height: calc(100vh - var(--bottom-nav-h) - var(--topbar-h)); }
 
   /* POS: dikey */
   .pos-body { flex-direction: column; }
@@ -1471,7 +1447,6 @@ select.form-input option { background:var(--bg3); }
     flex-direction: column;
     height: 100vh;
     height: 100dvh; /* Dynamic viewport height — mobil URL bar ile uyumlu */
-    height: calc(var(--vh, 1vh) * 100); /* WhatsApp/Instagram gibi in-app tarayıcılar için gerçek yükseklik */
   }
 
   /* Sidebar bottom'a fixed — views bottom-nav kadar kısa olmalı */
@@ -1480,12 +1455,10 @@ select.form-input option { background:var(--bg3); }
   /* Views container — sidebar hariç kalan alan (home indicator dahil) */
   .view {
     height: calc(100dvh - var(--bottom-nav-h) - var(--topbar-h));
-    height: calc(var(--vh, 1vh) * 100 - var(--bottom-nav-h) - var(--topbar-h));
   }
 
   .pos-body {
     height: calc(100dvh - var(--bottom-nav-h) - var(--topbar-h));
-    height: calc(var(--vh, 1vh) * 100 - var(--bottom-nav-h) - var(--topbar-h));
   }
 
   /* Scrollable view bodies — bottom nav'ın üstünde rahat nefes payı */
