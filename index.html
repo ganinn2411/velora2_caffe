@@ -10,6 +10,27 @@
   <meta name="theme-color" content="#080808">
   <meta name="description" content="VELORA Coffee & Kitchen için sipariş, masa, barista ve raporlama POS sistemi.">
   <title>VELORA Coffee</title>
+  <!-- ══ GERÇEK VIEWPORT YÜKSEKLİĞİ DÜZELTMESİ ══════════════
+       WhatsApp / Instagram gibi uygulama-içi tarayıcılarda (in-app
+       browser) kendi alt araç çubukları olduğu için 100vh / 100dvh
+       yanlış hesaplanıyor ve panel/nav elemanları ekranın dışına
+       taşıyor ya da üst üste biniyordu. Gerçek görünür yüksekliği
+       JS ile ölçüp --vh değişkenine yazıyoruz; CSS bunu kullanıyor. -->
+  <script>
+    (function () {
+      function setRealVH() {
+        var h = (window.visualViewport ? window.visualViewport.height : window.innerHeight);
+        document.documentElement.style.setProperty('--vh', (h * 0.01) + 'px');
+      }
+      setRealVH();
+      window.addEventListener('resize', setRealVH);
+      window.addEventListener('orientationchange', setRealVH);
+      if (window.visualViewport) {
+        window.visualViewport.addEventListener('resize', setRealVH);
+        window.visualViewport.addEventListener('scroll', setRealVH);
+      }
+    })();
+  </script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
