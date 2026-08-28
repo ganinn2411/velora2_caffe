@@ -1,1473 +1,2498 @@
+"use strict";
+
 /* ═══════════════════════════════════════════════════════
-   AURA Coffee & Kitchen — POS System  style.css
+   AURA Coffee & Kitchen — app.js
+   Tüm uygulama mantığı
 ═══════════════════════════════════════════════════════ */
 
-*, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
-
-:root {
-  --bg:        #080808;
-  --bg2:       #101010;
-  --bg3:       #161616;
-  --bg4:       #1e1e1e;
-  --bg5:       #252525;
-  --accent:    #C8A96E;
-  --accent2:   #E2C48A;
-  --accent3:   #8B6B3D;
-  --accent-bg: rgba(200,169,110,0.10);
-  --accent-bd: rgba(200,169,110,0.22);
-  --text:      #F2EDE4;
-  --text2:     #9A8878;
-  --text3:     #5A4E46;
-  --green:     #4CAF7A;
-  --green-bg:  rgba(76,175,122,0.12);
-  --red:       #E05575;
-  --red-bg:    rgba(224,85,117,0.12);
-  --purple:    #9B8FE0;
-  --purple-bg: rgba(155,143,224,0.12);
-  --orange:    #E89843;
-  --orange-bg: rgba(232,152,67,0.12);
-  --blue:      #5B9CF6;
-  --blue-bg:   rgba(91,156,246,0.12);
-  --border:    1px solid #1e1e1e;
-  --border2:   1px solid #282828;
-  --r-sm:      8px;
-  --r:         12px;
-  --r-lg:      18px;
-  --r-xl:      24px;
-  --sidebar-w: 76px;
-  --topbar-h:  62px;
-  --bottom-nav-h: 0px; /* Sadece ≤520px'te alt navigasyon barı için yeniden tanımlanır */
-  --transition: 0.18s cubic-bezier(0.4,0,0.2,1);
-}
-
-html, body {
-  width:100%; height:100%; overflow:hidden;
-  background:var(--bg); color:var(--text);
-  font-family:'DM Sans', sans-serif; font-size:14px;
-  -webkit-font-smoothing:antialiased;
-  scrollbar-width:thin; scrollbar-color:var(--bg4) transparent;
-}
-
-::-webkit-scrollbar { width:4px; height:4px; }
-::-webkit-scrollbar-track { background:transparent; }
-::-webkit-scrollbar-thumb { background:var(--bg4); border-radius:4px; }
-::-webkit-scrollbar-thumb:hover { background:var(--bg5); }
-
-/* ══ PROFESYONEL DOKUNUŞLAR — Dokunmatik & Erişilebilirlik ══
-   Tüm cihazlarda native-app hissi için global iyileştirmeler */
-* { -webkit-tap-highlight-color:transparent; }
-button, .product-card, .table-card, .nav-btn, .cat-tab, a {
-  touch-action:manipulation; /* 300ms dokunma gecikmesini kaldırır */
-}
-::selection { background:var(--accent-bg); color:var(--accent); }
-:focus-visible {
-  outline:2px solid var(--accent); outline-offset:2px; border-radius:4px;
-}
-button:focus-visible, .nav-btn:focus-visible, .product-card:focus-visible { outline-offset:-2px; }
-
-/* Ana scroll alanlarında "rubber-band" kaçışını gövdeye sızdırma */
-.product-scroll, .order-list, .tables-body, .reports-body,
-.barista-queue, .mm-product-list, .settings-body, .coupon-body,
-.cp-list-body, .mm-cat-list, .modal-body { overscroll-behavior:contain; }
-
-/* ══ ANIMATIONS ══════════════════════════════════════ */
-@keyframes fadeIn    { from { opacity:0; transform:translateY(6px); } to { opacity:1; transform:translateY(0); } }
-@keyframes slideRight{ from { opacity:0; transform:translateX(14px); } to { opacity:1; transform:translateX(0); } }
-@keyframes slideDown { from { opacity:0; transform:translateY(-8px); } to { opacity:1; transform:translateY(0); } }
-@keyframes cpSlide   { from { opacity:0; transform:translateY(-6px); } to { opacity:1; transform:translateY(0); } }
-@keyframes ringPulse { from { transform:scale(.6); opacity:0; } to { transform:scale(1); opacity:1; } }
-@keyframes checkAppear { from { opacity:0; transform:scale(.4); } to { opacity:1; transform:scale(1); } }
-@keyframes blink     { 0%,100% { opacity:1; } 50% { opacity:.4; } }
-@keyframes pulse-red { 0%,100% { box-shadow:0 0 0 0 rgba(224,85,117,0); } 50% { box-shadow:0 0 0 4px rgba(224,85,117,.12); } }
-@keyframes shake     { 0%,100% { transform:translateX(0); } 20%,60% { transform:translateX(-10px); } 40%,80% { transform:translateX(10px); } }
-
-/* ══ LOCK SCREEN ══════════════════════════════════════ */
-.lock-screen {
-  position:fixed; inset:0; background:var(--bg);
-  display:flex; align-items:center; justify-content:center;
-  z-index:9999; overflow:hidden;
-}
-.lock-bg-orb { position:absolute; border-radius:50%; filter:blur(80px); pointer-events:none; }
-.lock-orb1 { width:500px; height:500px; background:radial-gradient(circle,rgba(200,169,110,.08),transparent 70%); top:-100px; right:-100px; }
-.lock-orb2 { width:400px; height:400px; background:radial-gradient(circle,rgba(155,143,224,.06),transparent 70%); bottom:-100px; left:-80px; }
-
-.lock-card {
-  background:var(--bg2); border:var(--border); border-radius:var(--r-xl);
-  padding:44px 52px 40px; text-align:center;
-  max-width:440px; width:92%; position:relative; z-index:1;
-}
-.lock-logo {
-  width:64px; height:64px; background:var(--accent); border-radius:var(--r-lg);
-  display:flex; align-items:center; justify-content:center; margin:0 auto 18px;
-}
-.lock-logo-letter { font-family:'Syne',sans-serif; font-weight:800; font-size:28px; color:#0a0a0a; letter-spacing:-2px; }
-.lock-title  { font-family:'Syne',sans-serif; font-size:30px; font-weight:800; letter-spacing:-1px; color:var(--text); margin-bottom:4px; }
-.lock-subtitle { font-size:12px; color:var(--text3); margin-bottom:32px; letter-spacing:.8px; text-transform:uppercase; }
-
-.staff-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:20px; }
-.staff-btn {
-  background:var(--bg3); border:var(--border2); border-radius:var(--r); padding:16px 12px;
-  cursor:pointer; transition:var(--transition); display:flex; flex-direction:column;
-  align-items:center; gap:8px; color:var(--text2);
-  font-family:'DM Sans',sans-serif; font-size:13px;
-}
-.staff-btn:hover { border-color:var(--accent-bd); background:var(--bg4); color:var(--text); transform:translateY(-1px); }
-.staff-avatar {
-  width:44px; height:44px; border-radius:12px;
-  display:flex; align-items:center; justify-content:center;
-  font-family:'Syne',sans-serif; font-weight:700; font-size:18px; color:#0a0a0a;
-}
-.staff-name { font-size:12px; font-weight:500; }
-.staff-role { font-size:10px; color:var(--text3); }
-
-.pin-card {
-  background:var(--bg2); border:var(--border); border-radius:var(--r-xl);
-  padding:36px 48px 40px; text-align:center;
-  max-width:360px; width:92%; position:relative; z-index:1; display:none;
-}
-.pin-back-btn {
-  position:absolute; top:16px; left:16px; background:none; border:none;
-  color:var(--text3); cursor:pointer; font-size:14px; padding:6px;
-  display:flex; align-items:center; gap:6px; font-family:'DM Sans',sans-serif; font-size:12px;
-  transition:var(--transition);
-}
-.pin-back-btn:hover { color:var(--text2); }
-.pin-user-avatar {
-  width:56px; height:56px; border-radius:16px;
-  display:flex; align-items:center; justify-content:center;
-  font-family:'Syne',sans-serif; font-weight:700; font-size:22px;
-  margin:0 auto 10px;
-}
-.pin-user-name { font-family:'Syne',sans-serif; font-size:18px; font-weight:700; color:var(--text); margin-bottom:2px; }
-.pin-user-role { font-size:12px; color:var(--text3); margin-bottom:20px; }
-.pin-dots { display:flex; justify-content:center; gap:12px; margin-bottom:6px; }
-.pin-dot { width:14px; height:14px; border-radius:50%; background:var(--bg4); border:2px solid var(--bg5); transition:all .2s; }
-.pin-dot.filled { background:var(--accent); border-color:var(--accent); transform:scale(1.1); }
-.pin-error { color:var(--red); font-size:12px; min-height:18px; margin-bottom:6px; }
-.pin-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin-top:4px; }
-.pin-btn {
-  background:var(--bg3); border:var(--border2); border-radius:var(--r); height:52px;
-  color:var(--text); font-family:'Syne',sans-serif; font-size:20px; font-weight:700;
-  cursor:pointer; transition:var(--transition); display:flex; align-items:center; justify-content:center;
-}
-.pin-btn:hover { background:var(--bg4); border-color:var(--accent-bd); }
-.pin-btn:active { transform:scale(.93); }
-.pin-del { font-size:16px; color:var(--text3); }
-.pin-del:hover { color:var(--red); }
-
-/* ══ APP SHELL ════════════════════════════════════════ */
-.app { display:flex; width:100vw; height:100vh; height:100dvh; overflow:hidden; animation:fadeIn .3s ease; }
-
-/* ══ SIDEBAR ══════════════════════════════════════════ */
-.sidebar {
-  width:var(--sidebar-w); background:var(--bg2); border-right:var(--border);
-  display:flex; flex-direction:column; align-items:center;
-  padding:16px 0; gap:4px; flex-shrink:0; z-index:10;
-}
-.sidebar-logo {
-  width:44px; height:44px; background:var(--accent); border-radius:14px;
-  display:flex; align-items:center; justify-content:center;
-  font-family:'Syne',sans-serif; font-weight:800; font-size:20px;
-  color:#0a0a0a; letter-spacing:-1px; margin-bottom:12px; cursor:default;
-}
-.sidebar-nav { display:flex; flex-direction:column; gap:4px; flex:1; width:100%; padding:0 10px; }
-.nav-btn {
-  width:100%; aspect-ratio:1; border-radius:var(--r); border:none; background:transparent;
-  color:var(--text3); font-size:18px; cursor:pointer;
-  display:flex; flex-direction:column; align-items:center; justify-content:center;
-  gap:4px; transition:var(--transition); position:relative;
-}
-.nav-btn .nav-label { font-size:9px; font-family:'DM Sans',sans-serif; letter-spacing:.3px; font-weight:500; }
-.nav-btn:hover { background:var(--bg3); color:var(--text2); }
-.nav-btn.active { background:var(--accent-bg); color:var(--accent); border:1px solid var(--accent-bd); }
-.nav-badge {
-  position:absolute; top:6px; right:6px; background:var(--red); color:#fff;
-  font-size:9px; font-weight:700; min-width:16px; height:16px; border-radius:8px;
-  display:flex; align-items:center; justify-content:center; padding:0 4px;
-}
-.sidebar-bottom {
-  display:flex; flex-direction:column; align-items:center; gap:4px;
-  width:100%; padding:0 10px; border-top:var(--border); padding-top:10px;
-}
-.staff-pill {
-  width:100%; background:var(--bg3); border:var(--border); border-radius:var(--r);
-  padding:8px; display:flex; flex-direction:column; align-items:center; gap:4px;
-}
-.staff-pill-avatar {
-  width:30px; height:30px; border-radius:8px; background:var(--accent-bg);
-  border:1px solid var(--accent-bd); color:var(--accent);
-  font-family:'Syne',sans-serif; font-weight:700; font-size:12px;
-  display:flex; align-items:center; justify-content:center;
-}
-.staff-pill-name  { font-size:9px; font-weight:500; color:var(--text2); display:block; text-align:center; }
-.staff-pill-role  { font-size:8px; color:var(--text3); display:block; text-align:center; }
-
-/* ══ VIEWS ════════════════════════════════════════════ */
-.view { flex:1; display:flex; flex-direction:column; overflow:hidden; animation:fadeIn .2s ease; }
-.view-hidden { display:none !important; }
-
-/* ══ TOPBAR ═══════════════════════════════════════════ */
-.topbar {
-  height:var(--topbar-h); background:var(--bg2); border-bottom:var(--border);
-  display:flex; align-items:center; padding:0 24px; gap:16px; flex-shrink:0;
-}
-.topbar-left { display:flex; flex-direction:column; gap:2px; }
-.topbar-title { font-family:'Syne',sans-serif; font-weight:700; font-size:17px; color:var(--text); letter-spacing:-.3px; }
-.topbar-meta  { font-size:12px; color:var(--text3); }
-.topbar-right { display:flex; align-items:center; gap:10px; margin-left:auto; }
-.topbar-time  { font-family:'Syne',sans-serif; font-size:14px; font-weight:600; color:var(--text3); letter-spacing:.5px; }
-
-.topbar-btn {
-  display:flex; align-items:center; gap:7px; background:var(--bg3); border:var(--border2);
-  border-radius:var(--r); padding:0 14px; height:38px; color:var(--text2);
-  font-family:'DM Sans',sans-serif; font-size:13px; cursor:pointer;
-  transition:var(--transition); white-space:nowrap;
-}
-.topbar-btn:hover { border-color:#333; color:var(--text); }
-.topbar-btn.accent-btn { background:var(--accent); border-color:var(--accent); color:#0a0a0a; font-weight:600; }
-.topbar-btn.accent-btn:hover { background:var(--accent2); }
-
-.search-box {
-  display:flex; align-items:center; background:var(--bg3); border:var(--border2);
-  border-radius:var(--r); padding:0 12px; height:38px; gap:8px; width:260px; transition:var(--transition);
-}
-.search-box:focus-within { border-color:var(--accent-bd); background:var(--bg4); }
-.search-icon  { color:var(--text3); font-size:13px; flex-shrink:0; }
-.search-input { flex:1; background:transparent; border:none; outline:none; color:var(--text); font-family:'DM Sans',sans-serif; font-size:13px; }
-.search-input::placeholder { color:var(--text3); }
-
-/* ══ POS VIEW ═════════════════════════════════════════ */
-.pos-body    { display:flex; flex:1; overflow:hidden; }
-.menu-panel  { flex:1; display:flex; flex-direction:column; overflow:hidden; }
-
-.cat-tabs { display:flex; gap:6px; padding:16px 20px 0; overflow-x:auto; flex-shrink:0; scrollbar-width:none; }
-.cat-tabs::-webkit-scrollbar { display:none; }
-.cat-tab {
-  display:flex; align-items:center; gap:6px; padding:8px 16px; border-radius:100px;
-  border:var(--border2); background:transparent; color:var(--text3);
-  font-family:'DM Sans',sans-serif; font-size:13px; font-weight:500;
-  cursor:pointer; transition:var(--transition); white-space:nowrap; flex-shrink:0;
-}
-.cat-tab:hover  { border-color:#333; color:var(--text2); }
-.cat-tab.active { background:var(--accent); border-color:var(--accent); color:#080808; font-weight:600; }
-.cat-count { font-size:10px; background:rgba(0,0,0,.15); padding:1px 6px; border-radius:10px; font-weight:600; }
-
-.product-scroll { flex:1; overflow-y:auto; padding:14px 20px 20px; }
-.product-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(148px,1fr)); gap:10px; }
-
-.product-card {
-  background:var(--bg2); border:var(--border); border-radius:var(--r-lg);
-  padding:16px 14px 12px; cursor:pointer;
-  transition:all .2s cubic-bezier(.4,0,.2,1); position:relative; overflow:hidden; user-select:none;
-}
-.product-card:hover  { border-color:var(--accent-bd); transform:translateY(-2px); background:var(--bg3); }
-.product-card:active { transform:translateY(0) scale(.98); }
-.product-card.unavailable { opacity:.38; pointer-events:none; filter:grayscale(1); }
-
-.card-top-row   { display:flex; align-items:flex-start; justify-content:space-between; margin-bottom:8px; }
-.product-emoji  { font-size:30px; line-height:1; }
-.popular-badge  {
-  font-size:9px; font-weight:700; letter-spacing:.8px; text-transform:uppercase;
-  color:var(--accent); background:var(--accent-bg); border:1px solid var(--accent-bd);
-  padding:2px 7px; border-radius:6px;
-}
-.product-name   { font-size:13px; font-weight:500; color:var(--text); margin-bottom:3px; line-height:1.3; }
-.product-desc   { font-size:11px; color:var(--text3); line-height:1.4; margin-bottom:12px; }
-.card-footer    { display:flex; align-items:center; justify-content:space-between; }
-.product-price  { font-family:'Syne',sans-serif; font-size:15px; font-weight:700; color:var(--accent); }
-.add-btn {
-  width:28px; height:28px; border-radius:8px; border:1px solid var(--bg5);
-  background:var(--bg4); color:var(--text2); font-size:17px; cursor:pointer;
-  display:flex; align-items:center; justify-content:center; transition:var(--transition);
-}
-.add-btn:hover  { background:var(--accent); border-color:var(--accent); color:#0a0a0a; }
-.add-btn:active { transform:scale(.88); }
-
-/* ══ ORDER PANEL ══════════════════════════════════════ */
-.order-panel {
-  width:310px; background:var(--bg2); border-left:var(--border);
-  display:flex; flex-direction:column; flex-shrink:0; overflow:hidden;
-}
-.order-header { padding:16px 16px 0; flex-shrink:0; }
-.order-header-top { display:flex; align-items:center; justify-content:space-between; margin-bottom:12px; }
-.order-title { font-family:'Syne',sans-serif; font-size:16px; font-weight:700; color:var(--text); }
-.order-meta-row { display:flex; align-items:center; gap:8px; }
-.order-badge {
-  font-size:11px; font-weight:600; background:var(--accent-bg); color:var(--accent);
-  border:1px solid var(--accent-bd); padding:2px 9px; border-radius:8px;
-}
-.order-clear-btn {
-  background:none; border:none; color:var(--text3); font-size:11px; cursor:pointer;
-  display:flex; align-items:center; gap:4px; transition:var(--transition);
-  font-family:'DM Sans',sans-serif; padding:4px 8px; border-radius:6px;
-}
-.order-clear-btn:hover { color:var(--red); background:var(--red-bg); }
-
-/* Sipariş Tipi: Masada / Paket */
-.order-type-toggle { display:flex; gap:6px; margin-bottom:10px; }
-.ot-btn {
-  flex:1; display:flex; align-items:center; justify-content:center; gap:6px;
-  background:var(--bg3); border:var(--border2); border-radius:var(--r);
-  height:34px; font-size:11px; font-weight:500; color:var(--text2); cursor:pointer;
-  transition:var(--transition); font-family:'DM Sans',sans-serif;
-}
-.ot-btn:hover  { border-color:#333; color:var(--text); }
-.ot-btn.active { background:var(--accent); border-color:var(--accent); color:#0a0a0a; font-weight:600; }
-.ot-btn i { font-size:12px; }
-
-.table-select-btn {
-  width:100%; display:flex; align-items:center; gap:8px; background:var(--bg3); border:var(--border2);
-  border-radius:var(--r); height:38px; padding:0 12px; color:var(--text2); font-size:12px; font-weight:500;
-  cursor:pointer; margin-bottom:14px; transition:var(--transition); font-family:'DM Sans',sans-serif;
-}
-.table-select-btn:hover  { border-color:var(--accent-bd); color:var(--text); }
-.table-select-btn.warn   { border-color:rgba(232,152,67,.45); background:var(--orange-bg); color:var(--orange); }
-
-.dinein-note {
-  display:flex; align-items:center; gap:7px; font-size:11px; color:var(--text3);
-  padding:10px 12px; border-top:var(--border); flex-shrink:0;
-}
-.dinein-note i { color:var(--accent); }
-
-.order-list { flex:1; overflow-y:auto; padding:0 12px; }
-.order-empty { display:flex; flex-direction:column; align-items:center; justify-content:center; height:140px; color:var(--text3); gap:6px; }
-.order-empty-icon { font-size:32px; opacity:.4; }
-.order-empty p { font-size:13px; font-weight:500; color:var(--text3); }
-
-.order-item { display:flex; align-items:center; gap:8px; padding:9px 0; border-bottom:1px solid var(--bg4); animation:slideRight .2s ease; }
-.oi-emoji { font-size:22px; flex-shrink:0; }
-.oi-info  { flex:1; min-width:0; }
-.oi-name  { font-size:12px; font-weight:500; color:var(--text); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-.oi-price { font-size:11px; color:var(--text3); margin-top:1px; }
-.oi-qty   { display:flex; align-items:center; gap:5px; flex-shrink:0; }
-.qty-btn  {
-  width:22px; height:22px; border-radius:6px; border:1px solid var(--bg5);
-  background:var(--bg3); color:var(--text2); font-size:14px; cursor:pointer;
-  display:flex; align-items:center; justify-content:center; transition:var(--transition);
-}
-.qty-btn:hover       { border-color:var(--accent-bd); color:var(--accent); }
-.qty-btn.minus:hover { border-color:rgba(224,85,117,.3); color:var(--red); }
-.qty-num { font-family:'Syne',sans-serif; font-size:13px; font-weight:700; color:var(--text); min-width:16px; text-align:center; }
-
-.order-note-wrap { padding:10px 12px; border-top:var(--border); flex-shrink:0; }
-.note-label { font-size:10px; color:var(--text3); letter-spacing:1px; text-transform:uppercase; display:flex; align-items:center; gap:5px; margin-bottom:6px; }
-.note-input {
-  width:100%; background:var(--bg3); border:var(--border2); border-radius:var(--r);
-  padding:8px 10px; color:var(--text); font-family:'DM Sans',sans-serif;
-  font-size:12px; outline:none; resize:none; height:50px; transition:var(--transition);
-}
-.note-input:focus { border-color:var(--accent-bd); }
-.note-input::placeholder { color:var(--text3); }
-
-.order-totals { padding:10px 12px; border-top:var(--border); flex-shrink:0; }
-.total-row { display:flex; justify-content:space-between; align-items:center; font-size:12px; color:var(--text2); margin-bottom:5px; }
-.total-grand {
-  font-family:'Syne',sans-serif; font-size:16px; font-weight:700; color:var(--text);
-  border-top:1px solid var(--bg5); padding-top:8px; margin-top:4px; margin-bottom:0;
-}
-
-.discount-wrap { padding:8px 12px; flex-shrink:0; }
-.discount-toggle {
-  background:none; border:1px dashed var(--bg5); border-radius:var(--r);
-  color:var(--text3); font-size:12px; cursor:pointer; width:100%; padding:7px;
-  font-family:'DM Sans',sans-serif; transition:var(--transition);
-  display:flex; align-items:center; justify-content:center; gap:6px;
-}
-.discount-toggle:hover { border-color:var(--accent-bd); color:var(--accent); }
-.discount-box  { display:flex; gap:6px; margin-top:8px; }
-.discount-input {
-  flex:1; background:var(--bg3); border:var(--border2); border-radius:var(--r-sm);
-  padding:7px 10px; color:var(--text); font-family:'DM Sans',sans-serif;
-  font-size:13px; outline:none; text-transform:uppercase;
-}
-.discount-input:focus { border-color:var(--accent-bd); }
-.discount-apply, .discount-remove {
-  background:var(--bg3); border:var(--border2); border-radius:var(--r-sm);
-  color:var(--text2); font-size:12px; padding:7px 10px; cursor:pointer;
-  font-family:'DM Sans',sans-serif; transition:var(--transition);
-}
-.discount-apply:hover  { background:var(--green-bg); color:var(--green); border-color:rgba(76,175,122,.3); }
-.discount-remove:hover { background:var(--red-bg); color:var(--red); border-color:rgba(224,85,117,.3); }
-
-.payment-section { padding:10px 12px 14px; border-top:var(--border); flex-shrink:0; }
-.payment-label   { font-size:10px; color:var(--text3); letter-spacing:1px; text-transform:uppercase; margin-bottom:8px; }
-.payment-methods { display:flex; gap:6px; margin-bottom:10px; }
-.pay-method {
-  flex:1; background:var(--bg3); border:var(--border2); border-radius:var(--r);
-  color:var(--text3); font-size:12px; font-family:'DM Sans',sans-serif; cursor:pointer;
-  padding:8px 4px; display:flex; flex-direction:column; align-items:center; gap:4px;
-  transition:var(--transition); font-weight:500;
-}
-.pay-method:hover  { border-color:#333; color:var(--text2); }
-.pay-method.active { background:var(--accent-bg); border-color:var(--accent-bd); color:var(--accent); }
-.pay-method i { font-size:16px; }
-
-.confirm-btn {
-  width:100%; background:var(--accent); border:none; border-radius:var(--r);
-  color:#080808; font-family:'Syne',sans-serif; font-size:14px; font-weight:700;
-  padding:13px 16px; cursor:pointer; display:flex; align-items:center;
-  justify-content:space-between; gap:8px; transition:all .2s;
-}
-.confirm-btn:hover:not(:disabled) { background:var(--accent2); transform:translateY(-1px); }
-.confirm-btn:disabled { opacity:.35; cursor:not-allowed; }
-.confirm-total { font-family:'Syne',sans-serif; font-size:16px; font-weight:800; }
-
-/* ══ TABLES VIEW ══════════════════════════════════════ */
-.tables-body { flex:1; overflow-y:auto; padding:24px; display:flex; flex-direction:column; gap:28px; }
-.zone-section
-.zone-title {
-  font-family:'Syne',sans-serif; font-size:12px; font-weight:600; color:var(--text3);
-  letter-spacing:1.5px; text-transform:uppercase;
-  display:flex; align-items:center; gap:8px; margin-bottom:14px;
-}
-.tables-grid { display:flex; flex-wrap:wrap; gap:12px; }
-
-.table-card {
-  width:110px; height:110px; background:var(--bg2); border:var(--border);
-  border-radius:var(--r-lg); display:flex; flex-direction:column;
-  align-items:center; justify-content:center;
-  cursor:pointer; transition:all .2s; position:relative; gap:5px;
-}
-.table-card:hover   { border-color:var(--accent-bd); transform:translateY(-2px); background:var(--bg3); }
-.table-card.occupied { border-color:rgba(232,152,67,.3); }
-.table-card.waiting  { border-color:rgba(224,85,117,.4); animation:pulse-red 2s infinite; }
-
-.table-num     { font-family:'Syne',sans-serif; font-size:20px; font-weight:800; color:var(--text); }
-.table-status  { font-size:10px; font-weight:500; padding:2px 8px; border-radius:6px; }
-.table-status.free     { color:var(--text3); }
-.table-status.occupied { background:var(--orange-bg); color:var(--orange); }
-.table-status.waiting  { background:var(--red-bg); color:var(--red); }
-.table-total    { font-size:11px; color:var(--accent); }
-.table-capacity { position:absolute; top:8px; right:8px; font-size:9px; color:var(--text3); display:flex; align-items:center; gap:2px; }
-
-.table-legend { display:flex; align-items:center; gap:14px; font-size:12px; color:var(--text3); }
-.legend-dot { display:inline-block; width:8px; height:8px; border-radius:50%; margin-right:4px; }
-.dot-free { background:var(--bg5); }  .dot-occupied { background:var(--orange); }  .dot-waiting { background:var(--red); }
-
-/* ══ BARISTA VIEW ═════════════════════════════════════ */
-.barista-body    { flex:1; overflow:hidden; padding:20px; }
-.barista-columns { display:grid; grid-template-columns:repeat(4,1fr); gap:14px; height:100%; }
-.barista-col     { background:var(--bg2); border:var(--border); border-radius:var(--r-lg); display:flex; flex-direction:column; overflow:hidden; }
-.barista-col-header {
-  padding:14px 16px; font-family:'Syne',sans-serif; font-size:12px; font-weight:700;
-  letter-spacing:1px; text-transform:uppercase; display:flex; align-items:center;
-  gap:8px; border-bottom:var(--border); flex-shrink:0;
-}
-.barista-col-header.pending   { color:var(--orange); }
-.barista-col-header.preparing { color:var(--red); }
-.barista-col-header.ready     { color:var(--green); }
-.barista-col-header.delivered { color:var(--text3); }
-.col-count {
-  margin-left:auto; padding:2px 8px; border-radius:6px; font-size:11px;
-}
-.col-count.pending   { background:var(--orange-bg); }
-.col-count.preparing { background:var(--red-bg); }
-.col-count.ready     { background:var(--green-bg); }
-
-.barista-queue { flex:1; overflow-y:auto; padding:10px; display:flex; flex-direction:column; gap:8px; }
-.barista-ticket {
-  background:var(--bg3); border:var(--border); border-radius:var(--r);
-  padding:12px; cursor:pointer; transition:var(--transition); animation:slideDown .25s ease;
-}
-.barista-ticket:hover { border-color:var(--accent-bd); background:var(--bg4); }
-.ticket-top  { display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:8px; }
-.ticket-order { font-family:'Syne',sans-serif; font-weight:800; font-size:15px; color:var(--accent); }
-.ticket-table { font-size:10px; color:var(--text3); background:var(--bg4); padding:2px 7px; border-radius:6px; }
-.ticket-time  { font-size:10px; color:var(--text3); margin-bottom:8px; display:flex; align-items:center; gap:4px; }
-.ticket-item  { font-size:12px; color:var(--text2); padding:3px 0; border-bottom:1px solid var(--bg4); display:flex; justify-content:space-between; }
-.ticket-item:last-child { border-bottom:none; }
-.ticket-note   { font-size:11px; color:var(--orange); margin-top:6px; font-style:italic; }
-.ticket-action { display:flex; gap:6px; margin-top:10px; }
-.ticket-btn {
-  flex:1; background:var(--bg4); border:var(--border2); border-radius:var(--r-sm);
-  color:var(--text2); font-size:11px; font-family:'DM Sans',sans-serif;
-  padding:6px; cursor:pointer; transition:var(--transition); font-weight:500;
-}
-.ticket-btn.primary { background:var(--accent-bg); border-color:var(--accent-bd); color:var(--accent); }
-.ticket-btn.primary:hover { background:var(--accent); color:#0a0a0a; }
-
-.barista-empty { text-align:center; color:var(--text3); font-size:12px; padding:24px 12px; }
-.barista-status-row { display:flex; align-items:center; gap:8px; }
-.barista-status-dot { width:8px; height:8px; border-radius:50%; background:var(--green); animation:blink 2s infinite; }
-
-/* ══ REPORTS VIEW ═════════════════════════════════════ */
-.reports-body {
-  flex: 1; overflow-y: auto; padding: 24px 28px;
-  display: flex; flex-direction: column; gap: 20px;
-}
-
-/* ── Stat Cards ── */
-.stat-cards {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 12px;
-}
-.stat-card {
-  background: var(--bg2);
-  border: 1px solid var(--bg4);
-  border-radius: 16px;
-  padding: 20px 18px 16px;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  transition: var(--transition);
-  position: relative;
-  overflow: hidden;
-}
-.stat-card::before {
-  content: '';
-  position: absolute;
-  top: 0; left: 0; right: 0;
-  height: 2px;
-  background: var(--card-accent, var(--accent));
-  opacity: 0.5;
-  border-radius: 16px 16px 0 0;
-}
-.stat-card:hover {
-  border-color: var(--bg5);
-  transform: translateY(-2px);
-  box-shadow: 0 8px 24px rgba(0,0,0,0.3);
-}
-.stat-card-top {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-.stat-icon {
-  width: 38px; height: 38px;
-  border-radius: 10px;
-  display: flex; align-items: center; justify-content: center;
-  font-size: 15px; flex-shrink: 0;
-}
-.stat-trend {
-  font-size: 11px;
-  color: var(--text3);
-  background: var(--bg4);
-  padding: 3px 8px;
-  border-radius: 20px;
-}
-.stat-info  { display: flex; flex-direction: column; gap: 2px; }
-.stat-label { font-size: 11px; color: var(--text3); font-weight: 500; letter-spacing: .5px; text-transform: uppercase; }
-.stat-val   { font-family: 'Syne', sans-serif; font-size: 24px; font-weight: 800; color: var(--text); line-height: 1; }
-.stat-sub   { font-size: 11px; color: var(--text3); }
-
-/* ── Charts Row ── */
-.charts-row {
-  display: grid;
-  grid-template-columns: 1fr 280px;
-  gap: 16px;
-}
-.chart-card {
-  background: var(--bg2);
-  border: 1px solid var(--bg4);
-  border-radius: 16px;
-  padding: 22px 20px;
-  overflow: hidden;
-}
-.chart-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  margin-bottom: 20px;
-}
-.chart-title-group { display: flex; flex-direction: column; gap: 3px; }
-.chart-title  { font-family: 'Syne', sans-serif; font-size: 14px; font-weight: 700; color: var(--text); }
-.chart-sub    { font-size: 11px; color: var(--text3); letter-spacing: .3px; }
-.chart-badge  {
-  font-size: 10px; font-weight: 600;
-  background: var(--accent-bg);
-  color: var(--accent);
-  border: 1px solid var(--accent-bd);
-  padding: 3px 10px; border-radius: 20px;
-  letter-spacing: .3px;
-}
-
-/* ── Bar Chart ── */
-.bar-chart { display: flex; align-items: flex-end; gap: 5px; height: 150px; }
-.bar-col   {
-  flex: 1; display: flex; flex-direction: column;
-  align-items: center; gap: 4px; height: 100%; justify-content: flex-end;
-}
-.bar-fill {
-  width: 100%;
-  background: linear-gradient(180deg, var(--accent3) 0%, rgba(139,107,61,0.4) 100%);
-  border-radius: 5px 5px 0 0;
-  transition: height .6s cubic-bezier(.4,0,.2,1);
-  min-height: 3px;
-  position: relative;
-}
-.bar-fill.peak {
-  background: linear-gradient(180deg, var(--accent) 0%, var(--accent3) 100%);
-  box-shadow: 0 0 12px rgba(200,169,110,0.35);
-}
-.bar-fill:hover { filter: brightness(1.2); cursor: default; }
-.bar-label { font-size: 9px; color: var(--text3); text-align: center; }
-.bar-val   { font-family: 'Syne', sans-serif; font-size: 9px; color: var(--text3); }
-
-/* ── Donut Chart ── */
-.donut-wrap   { display: flex; flex-direction: column; align-items: center; gap: 16px; }
-.donut-legend { display: flex; flex-direction: column; gap: 6px; width: 100%; }
-.legend-item  {
-  display: flex; align-items: center;
-  justify-content: space-between;
-  font-size: 12px;
-  padding: 7px 10px;
-  border-radius: 8px;
-  background: var(--bg3);
-  transition: var(--transition);
-}
-.legend-item:hover { background: var(--bg4); }
-.legend-color { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; margin-right: 8px; }
-.legend-name  { flex: 1; color: var(--text2); display: flex; align-items: center; font-size: 12px; }
-.legend-pct   { color: var(--text); font-weight: 700; font-family: 'Syne', sans-serif; font-size: 12px; }
-
-/* ── Order History / Top Products ── */
-.order-history { display: flex; flex-direction: column; }
-.history-item  {
-  display: flex; align-items: center; gap: 14px;
-  padding: 12px 4px;
-  border-bottom: 1px solid rgba(255,255,255,0.04);
-  transition: var(--transition);
-}
-.history-item:last-child { border-bottom: none; }
-.history-item:hover { background: var(--bg3); border-radius: 10px; padding-left: 10px; padding-right: 10px; }
-.history-num {
-  font-family: 'Syne', sans-serif; font-weight: 700;
-  color: var(--accent); font-size: 13px;
-  min-width: 36px;
-  background: var(--accent-bg);
-  padding: 4px 8px;
-  border-radius: 8px;
-  text-align: center;
-}
-.history-info  { flex: 1; }
-.history-table { font-size: 12px; color: var(--text2); font-weight: 500; }
-.history-items { font-size: 11px; color: var(--text3); margin-top: 2px; }
-.history-right { text-align: right; }
-.history-total { font-family: 'Syne', sans-serif; font-size: 14px; font-weight: 800; color: var(--text); }
-.history-method {
-  font-size: 10px; color: var(--text3);
-  margin-top: 2px;
-  display: flex; align-items: center; justify-content: flex-end; gap: 4px;
-}
-.history-method-badge {
-  display: inline-flex; align-items: center; gap: 4px;
-  background: var(--bg4); padding: 2px 7px; border-radius: 6px;
-  font-size: 10px; color: var(--text3);
-}
-
-/* ── Report Summary Bar ── */
-.report-summary-bar {
-  display: flex; gap: 12px; align-items: stretch;
-}
-.rsb-item {
-  flex: 1; background: var(--bg3);
-  border-radius: 12px; padding: 14px 16px;
-  display: flex; flex-direction: column; gap: 4px;
-}
-.rsb-label { font-size: 10px; color: var(--text3); letter-spacing: .5px; text-transform: uppercase; }
-.rsb-val   { font-family: 'Syne', sans-serif; font-size: 16px; font-weight: 700; color: var(--text); }
-.rsb-divider { width: 1px; background: var(--bg4); flex-shrink: 0; }
-
-/* ── Top Products ── */
-.top-product-item {
-  display: flex; align-items: center; gap: 12px;
-  padding: 10px 4px;
-  border-bottom: 1px solid rgba(255,255,255,0.04);
-  transition: var(--transition);
-}
-.top-product-item:last-child { border-bottom: none; }
-.top-product-item:hover { background: var(--bg3); border-radius: 10px; padding: 10px; }
-.tp-rank {
-  font-family: 'Syne', sans-serif;
-  font-size: 11px; font-weight: 700;
-  color: var(--text3);
-  width: 24px; text-align: center;
-  flex-shrink: 0;
-}
-.tp-rank.top1 { color: var(--accent); }
-.tp-rank.top2 { color: var(--text2); }
-.tp-rank.top3 { color: var(--orange); }
-.tp-emoji { font-size: 22px; flex-shrink: 0; }
-.tp-info  { flex: 1; }
-.tp-name  { font-size: 13px; font-weight: 600; color: var(--text); }
-.tp-cat   { font-size: 11px; color: var(--text3); margin-top: 1px; }
-.tp-right { text-align: right; }
-.tp-val   { font-family: 'Syne', sans-serif; font-size: 14px; font-weight: 800; color: var(--text); }
-.tp-count { font-size: 11px; color: var(--text3); margin-top: 2px; }
-.tp-bar-wrap { width: 60px; height: 4px; background: var(--bg4); border-radius: 2px; margin-top: 4px; margin-left: auto; }
-.tp-bar-fill { height: 100%; background: var(--accent); border-radius: 2px; transition: width .6s ease; }
-
-/* ══ MENU MANAGE VIEW ════════════════════════════════ */
-.menu-manage-body { flex:1; display:flex; overflow:hidden; }
-.mm-cat-list      { width:200px; border-right:var(--border); padding:16px 10px; display:flex; flex-direction:column; gap:4px; flex-shrink:0; overflow-y:auto; }
-.mm-cat-btn {
-  display:flex; align-items:center; justify-content:space-between; padding:10px 12px;
-  border-radius:var(--r); border:none; background:transparent; color:var(--text2);
-  font-family:'DM Sans',sans-serif; font-size:13px; cursor:pointer;
-  transition:var(--transition); width:100%; text-align:left;
-}
-.mm-cat-btn:hover  { background:var(--bg3); }
-.mm-cat-btn.active { background:var(--accent-bg); color:var(--accent); }
-.mm-cat-count { font-size:10px; background:var(--bg4); padding:1px 7px; border-radius:6px; color:var(--text3); }
-.mm-cat-btn.active .mm-cat-count { background:var(--accent-bg); color:var(--accent); }
-
-.mm-product-list { flex:1; overflow-y:auto; padding:16px 20px; }
-.mm-product-row  {
-  display:flex; align-items:center; gap:12px; padding:12px 14px;
-  background:var(--bg2); border:var(--border); border-radius:var(--r);
-  margin-bottom:8px; transition:var(--transition);
-}
-.mm-product-row:hover { border-color:var(--bg5); }
-.mm-emoji   { font-size:24px; flex-shrink:0; }
-.mm-info    { flex:1; }
-.mm-name    { font-size:13px; font-weight:500; color:var(--text); }
-.mm-desc    { font-size:11px; color:var(--text3); margin-top:2px; }
-.mm-price   { font-family:'Syne',sans-serif; font-size:14px; font-weight:700; color:var(--accent); margin-right:8px; }
-.mm-actions { display:flex; align-items:center; gap:8px; }
-.mm-edit-btn {
-  width:30px; height:30px; border-radius:8px; border:var(--border2); background:var(--bg3);
-  color:var(--text3); font-size:13px; cursor:pointer;
-  display:flex; align-items:center; justify-content:center; transition:var(--transition);
-}
-.mm-edit-btn:hover { color:var(--text2); border-color:#333; }
-
-.mm-del-btn:hover { background:var(--red-bg); color:var(--red); border-color:rgba(224,85,117,.3); }
-
-/* ══ TOGGLE ═══════════════════════════════════════════ */
-.toggle-switch { position:relative; display:inline-block; width:40px; height:22px; }
-.toggle-switch input { opacity:0; width:0; height:0; }
-.toggle-slider { position:absolute; inset:0; background:var(--bg4); border-radius:22px; cursor:pointer; transition:.3s; border:var(--border2); }
-.toggle-slider::before { content:''; position:absolute; width:16px; height:16px; border-radius:50%; background:var(--text3); left:3px; top:50%; transform:translateY(-50%); transition:.3s; }
-.toggle-switch input:checked + .toggle-slider { background:var(--accent-bg); border-color:var(--accent-bd); }
-.toggle-switch input:checked + .toggle-slider::before { background:var(--accent); transform:translateY(-50%) translateX(18px); }
-
-/* ══ COUPON VIEW ══════════════════════════════════════ */
-.coupon-body { flex:1; overflow-y:auto; padding:24px; display:flex; flex-direction:column; gap:20px; }
-.coupon-stats { display:grid; grid-template-columns:repeat(4,1fr); gap:14px; }
-.cp-stat {
-  background:var(--bg2); border:var(--border); border-radius:var(--r-lg);
-  padding:16px 18px; display:flex; align-items:center; gap:14px; transition:var(--transition);
-}
-.cp-stat:hover { border-color:var(--bg5); transform:translateY(-1px); }
-.cp-stat-icon  { width:40px; height:40px; border-radius:12px; display:flex; align-items:center; justify-content:center; font-size:16px; flex-shrink:0; }
-.cp-stat-val   { font-family:'Syne',sans-serif; font-size:20px; font-weight:800; color:var(--text); }
-.cp-stat-label { font-size:11px; color:var(--text3); font-weight:500; }
-
-.coupon-main { display:grid; grid-template-columns:380px 1fr; gap:20px; }
-
-.cp-form-panel { background:var(--bg2); border:var(--border); border-radius:var(--r-xl); overflow:hidden; display:flex; flex-direction:column; }
-.cp-panel-header { padding:20px 24px; border-bottom:var(--border); display:flex; align-items:center; gap:12px; }
-.cp-panel-icon  {
-  width:36px; height:36px; background:var(--accent-bg); border:1px solid var(--accent-bd);
-  border-radius:10px; display:flex; align-items:center; justify-content:center;
-  color:var(--accent); font-size:14px;
-}
-.cp-panel-title { font-family:'Syne',sans-serif; font-size:15px; font-weight:700; color:var(--text); }
-.cp-panel-sub   { font-size:11px; color:var(--text3); margin-top:1px; }
-
-.cp-form   { padding:20px 24px; display:flex; flex-direction:column; gap:14px; }
-.cp-field  { display:flex; flex-direction:column; gap:6px; }
-.cp-label  { font-size:10px; color:var(--text3); font-weight:700; letter-spacing:1px; text-transform:uppercase; }
-.required  { color:var(--red); }
-.cp-input  {
-  background:var(--bg3); border:var(--border2); border-radius:var(--r);
-  padding:10px 14px; color:var(--text); font-family:'DM Sans',sans-serif;
-  font-size:13px; outline:none; transition:var(--transition); width:100%;
-}
-.cp-input:focus { border-color:var(--accent-bd); background:var(--bg4); }
-.cp-input::placeholder { color:var(--text3); }
-select.cp-input { cursor:pointer; }
-select.cp-input option { background:var(--bg2); }
-
-.cp-input-row2 { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
-.cp-input-row3 { display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px; }
-
-.cp-type-select { display:flex; gap:8px; }
-.cp-type-pill {
-  flex:1; background:var(--bg3); border:var(--border2); border-radius:var(--r);
-  padding:10px 8px; cursor:pointer; transition:var(--transition);
-  display:flex; flex-direction:column; align-items:center; gap:4px;
-  font-family:'DM Sans',sans-serif; font-size:12px; color:var(--text3); font-weight:500;
-}
-.cp-type-pill:hover { border-color:#333; color:var(--text2); }
-.cp-type-pill.active.pct   { background:var(--purple-bg); border-color:rgba(155,143,224,.3); color:var(--purple); }
-.cp-type-pill.active.fixed { background:var(--orange-bg); border-color:rgba(232,152,67,.3); color:var(--orange); }
-.cp-type-pill i { font-size:18px; }
-
-.cp-preview {
-  background:var(--bg3); border:var(--border2); border-radius:var(--r);
-  padding:12px 16px; display:flex; align-items:center; gap:12px;
-}
-.cp-preview-badge { font-family:'Syne',sans-serif; font-size:22px; font-weight:800; color:var(--accent); min-width:80px; }
-.cp-preview-info  { font-size:11px; color:var(--text3); line-height:1.6; }
-
-.cp-add-btn {
-  width:100%; background:var(--accent); border:none; border-radius:var(--r);
-  color:#080808; font-family:'Syne',sans-serif; font-size:14px; font-weight:700;
-  padding:13px 20px; cursor:pointer; display:flex; align-items:center;
-  justify-content:center; gap:8px; transition:all .2s;
-}
-.cp-add-btn:hover { background:var(--accent2); transform:translateY(-1px); }
-
-.cp-list-panel { background:var(--bg2); border:var(--border); border-radius:var(--r-xl); overflow:hidden; display:flex; flex-direction:column; }
-.cp-list-header { padding:16px 20px; border-bottom:var(--border); display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px; }
-.cp-list-title  { font-family:'Syne',sans-serif; font-size:15px; font-weight:700; color:var(--text); display:flex; align-items:center; gap:10px; }
-.cp-count-badge { font-size:11px; font-weight:600; background:var(--bg4); color:var(--text3); border:var(--border2); padding:2px 10px; border-radius:20px; }
-.cp-filter-row  { display:flex; gap:6px; }
-.cp-filter-btn  {
-  background:transparent; border:var(--border2); border-radius:100px;
-  color:var(--text3); font-size:12px; font-family:'DM Sans',sans-serif;
-  padding:5px 12px; cursor:pointer; transition:var(--transition);
-}
-.cp-filter-btn:hover  { border-color:#333; color:var(--text2); }
-.cp-filter-btn.active { background:var(--accent-bg); border-color:var(--accent-bd); color:var(--accent); }
-
-.cp-list-body { flex:1; overflow-y:auto; padding:12px 16px; display:flex; flex-direction:column; gap:8px; }
-.cp-empty { display:flex; flex-direction:column; align-items:center; justify-content:center; padding:48px 24px; color:var(--text3); gap:10px; text-align:center; }
-.cp-empty-icon { font-size:36px; opacity:.3; }
-.cp-empty p { font-size:13px; }
-
-.cp-card { background:var(--bg3); border:var(--border2); border-radius:var(--r-lg); overflow:hidden; transition:all .2s; animation:cpSlide .25s ease; }
-.cp-card:hover   { border-color:var(--bg5); }
-.cp-card.inactive { opacity:.5; }
-.cp-card-main   { display:flex; align-items:stretch; }
-.cp-card-band   { width:4px; flex-shrink:0; }
-.cp-card-band.pct     { background:var(--purple); }
-.cp-card-band.fixed   { background:var(--orange); }
-.cp-card-band.inactive{ background:var(--bg5); }
-.cp-card-code   { padding:14px 16px; min-width:120px; border-right:var(--border2); display:flex; flex-direction:column; justify-content:center; }
-.cp-card-code-text { font-family:'Syne',sans-serif; font-size:15px; font-weight:800; color:var(--accent); letter-spacing:1.5px; }
-.cp-card-code-sub  { font-size:10px; color:var(--text3); margin-top:2px; text-transform:uppercase; letter-spacing:.5px; }
-.cp-card-details { flex:1; padding:12px 16px; display:flex; flex-direction:column; gap:4px; }
-.cp-card-row1   { display:flex; align-items:center; gap:6px; flex-wrap:wrap; }
-.cp-badge       { font-size:10px; font-weight:700; padding:2px 8px; border-radius:20px; }
-.cp-badge.type-pct    { background:var(--purple-bg); color:var(--purple); }
-.cp-badge.type-fixed  { background:var(--orange-bg); color:var(--orange); }
-.cp-badge.status-active   { background:var(--green-bg); color:var(--green); }
-.cp-badge.status-inactive { background:var(--bg4); color:var(--text3); }
-.cp-badge.status-expired  { background:var(--red-bg); color:var(--red); }
-.cp-card-desc   { font-size:12px; color:var(--text2); }
-.cp-card-meta   { display:flex; align-items:center; gap:8px; font-size:11px; color:var(--text3); }
-.cp-card-value  { padding:14px 16px; text-align:center; min-width:80px; border-left:var(--border2); display:flex; flex-direction:column; align-items:center; justify-content:center; }
-.cp-card-value-num { font-family:'Syne',sans-serif; font-size:22px; font-weight:800; }
-.cp-card-value-num.pct   { color:var(--purple); }
-.cp-card-value-num.fixed { color:var(--orange); }
-.cp-card-value-label { font-size:10px; color:var(--text3); margin-top:1px; }
-.cp-card-actions { padding:10px 12px; border-left:var(--border2); display:flex; flex-direction:column; gap:6px; justify-content:center; }
-.cp-action-btn {
-  width:30px; height:30px; border-radius:8px; border:var(--border2); background:var(--bg4);
-  color:var(--text3); font-size:12px; cursor:pointer;
-  display:flex; align-items:center; justify-content:center; transition:var(--transition);
-}
-.cp-action-btn.toggle-on:hover  { background:var(--green-bg); color:var(--green); border-color:rgba(76,175,122,.3); }
-.cp-action-btn.toggle-off:hover { background:var(--orange-bg); color:var(--orange); border-color:rgba(232,152,67,.3); }
-.cp-action-btn.delete:hover     { background:var(--red-bg); color:var(--red); border-color:rgba(224,85,117,.3); }
-
-/* ══ SETTINGS VIEW ════════════════════════════════════ */
-.settings-body { flex:1; overflow-y:auto; padding:24px; }
-.settings-section { background:var(--bg2); border:var(--border); border-radius:var(--r-xl); padding:24px; margin-bottom:16px; }
-.settings-section-title { font-family:'Syne',sans-serif; font-size:14px; font-weight:700; color:var(--text); margin-bottom:16px; display:flex; align-items:center; gap:8px; }
-.settings-row { display:flex; align-items:center; justify-content:space-between; padding:12px 0; border-bottom:1px solid var(--bg3); }
-.settings-row:last-child { border-bottom:none; }
-.settings-label { font-size:13px; color:var(--text2); }
-.settings-hint  { font-size:11px; color:var(--text3); margin-top:2px; }
-
-/* ══ MODALS ═══════════════════════════════════════════ */
-.modal-overlay {
-  position:fixed; inset:0; background:rgba(0,0,0,.78);
-  display:flex; align-items:center; justify-content:center;
-  z-index:9998; opacity:0; pointer-events:none;
-  transition:opacity .25s; backdrop-filter:blur(4px);
-}
-.modal-overlay.open { opacity:1; pointer-events:all; }
-.modal {
-  background:var(--bg2); border:var(--border2); border-radius:var(--r-xl);
-  padding:36px 40px; max-width:460px; width:92%;
-  transform:scale(.88) translateY(10px);
-  transition:transform .28s cubic-bezier(.34,1.56,.64,1); position:relative;
-}
-.modal-overlay.open .modal { transform:scale(1) translateY(0); }
-
-.success-modal { text-align:center; padding:40px; }
-.success-anim  { width:72px; height:72px; margin:0 auto 20px; position:relative; display:flex; align-items:center; justify-content:center; }
-.success-ring  { position:absolute; inset:0; border-radius:50%; border:2px solid var(--accent); animation:ringPulse .6s ease forwards; }
-.success-check { font-size:28px; color:var(--accent); animation:checkAppear .4s ease .2s both; }
-.modal-title   { font-family:'Syne',sans-serif; font-size:22px; font-weight:800; color:var(--text); margin-bottom:8px; }
-.success-order-num { font-family:'Syne',sans-serif; font-size:44px; font-weight:800; color:var(--accent); margin-bottom:16px; letter-spacing:-2px; }
-.success-details   { font-size:13px; color:var(--text3); margin-bottom:24px; line-height:1.6; }
-
-.add-product-modal { padding:0 !important; overflow:hidden; }
-.modal-header { display:flex; align-items:center; justify-content:space-between; padding:20px 24px; border-bottom:var(--border); }
-.modal-close  { background:none; border:none; color:var(--text3); font-size:16px; cursor:pointer; transition:var(--transition); padding:4px; }
-.modal-close:hover { color:var(--text2); }
-.modal-body   { padding:20px 24px; display:flex; flex-direction:column; gap:16px; }
-.form-row     { display:flex; gap:12px; }
-.form-group   { display:flex; flex-direction:column; gap:6px; flex:1; }
-.form-label   { font-size:11px; color:var(--text3); font-weight:600; letter-spacing:.5px; text-transform:uppercase; }
-.form-input   {
-  background:var(--bg3); border:var(--border2); border-radius:var(--r);
-  padding:10px 12px; color:var(--text); font-family:'DM Sans',sans-serif;
-  font-size:13px; outline:none; transition:var(--transition); width:100%;
-}
-.form-input:focus { border-color:var(--accent-bd); }
-.form-input::placeholder { color:var(--text3); }
-select.form-input { cursor:pointer; }
-select.form-input option { background:var(--bg3); }
-.modal-footer { display:flex; gap:10px; padding:16px 24px; border-top:var(--border); justify-content:flex-end; }
-.modal-btn {
-  padding:10px 20px; border-radius:var(--r); border:none;
-  font-family:'DM Sans',sans-serif; font-size:13px; font-weight:600; cursor:pointer;
-  display:flex; align-items:center; gap:6px; transition:var(--transition);
-}
-.modal-btn.accent    { background:var(--accent); color:#0a0a0a; }
-.modal-btn.accent:hover { background:var(--accent2); }
-.modal-btn.secondary { background:var(--bg3); border:var(--border2); color:var(--text2); }
-.modal-btn.secondary:hover { border-color:#333; color:var(--text); }
-
-/* ══ TOAST ════════════════════════════════════════════ */
-.toast {
-  position:fixed; bottom:calc(var(--bottom-nav-h) + 28px); left:50%;
-  transform:translateX(-50%) translateY(80px);
-  background:var(--bg3); border:var(--border2); border-radius:100px;
-  padding:10px 20px; font-size:13px; color:var(--text); z-index:99999;
-  transition:transform .3s cubic-bezier(.34,1.56,.64,1), bottom .2s ease;
-  white-space:nowrap; display:flex; align-items:center; gap:8px; pointer-events:none;
-}
-.toast.show { transform:translateX(-50%) translateY(0); }
-.toast-dot  { width:7px; height:7px; border-radius:50%; flex-shrink:0; }
-/* ══ SETTINGS — ENHANCED ═══════════════════════════════ */
-.settings-edit-btn {
-  background:var(--bg3); border:var(--border2); color:var(--text2);
-  border-radius:var(--r-sm); padding:7px 14px; font-size:12px;
-  font-family:'DM Sans',sans-serif; font-weight:600; cursor:pointer;
-  display:flex; align-items:center; gap:6px; transition:var(--transition);
-  white-space:nowrap; flex-shrink:0;
-}
-.settings-edit-btn:hover { border-color:var(--accent-bd); color:var(--accent); }
-
-.settings-add-btn {
-  background:var(--accent); color:#0a0a0a;
-  border:none; border-radius:var(--r-sm); padding:8px 16px;
-  font-family:'DM Sans',sans-serif; font-size:12px; font-weight:700;
-  cursor:pointer; display:flex; align-items:center; gap:6px;
-  transition:var(--transition); flex-shrink:0;
-}
-.settings-add-btn:hover { background:var(--accent2); }
-
-.settings-danger-btn {
-  background:var(--orange-bg); color:var(--orange);
-  border:1px solid rgba(232,152,67,0.3); border-radius:var(--r-sm);
-  padding:7px 14px; font-size:12px; font-family:'DM Sans',sans-serif;
-  font-weight:600; cursor:pointer; display:flex; align-items:center;
-  gap:6px; transition:var(--transition); white-space:nowrap; flex-shrink:0;
-}
-.settings-danger-btn:hover { opacity:.8; }
-
-/* Staff row in settings */
-.staff-settings-row {
-  display:flex; align-items:center; gap:14px;
-  background:var(--bg3); border:var(--border); border-radius:var(--r);
-  padding:12px 14px; transition:var(--transition);
-  animation: fadeIn .2s ease;
-}
-.staff-settings-row:hover { border-color:var(--bg5); }
-.staff-settings-row.staff-inactive { opacity:.55; }
-
-.staff-avatar-sm {
-  width:38px; height:38px; border-radius:10px;
-  display:flex; align-items:center; justify-content:center;
-  font-family:'Syne',sans-serif; font-size:15px; font-weight:800;
-  flex-shrink:0; color:#0a0a0a;
-}
-
-.staff-role-badge {
-  display:inline-block; font-size:10px; font-weight:700;
-  padding:2px 8px; border-radius:100px; letter-spacing:.5px; text-transform:uppercase;
-}
-.staff-role-badge.admin   { background:var(--accent-bg); color:var(--accent); }
-.staff-role-badge.barista { background:var(--bg4); color:var(--text2); }
-
-.staff-action-btn {
-  width:32px; height:32px; border-radius:var(--r-sm);
-  background:var(--bg4); border:var(--border2); color:var(--text2);
-  display:flex; align-items:center; justify-content:center;
-  cursor:pointer; font-size:12px; transition:var(--transition);
-}
-.staff-action-btn:hover { border-color:#333; color:var(--text); }
-.staff-action-btn.deactivate:hover { background:var(--orange-bg); color:var(--orange); border-color:rgba(232,152,67,.3); }
-.staff-action-btn.activate:hover  { background:var(--green-bg); color:var(--green); border-color:rgba(76,175,122,.3); }
-.staff-action-btn.delete:hover    { background:var(--red-bg); color:var(--red); border-color:rgba(224,85,117,.3); }
-
-/* Color picker chips */
-.color-chip {
-  width:28px; height:28px; border-radius:50%;
-  border:2px solid transparent; cursor:pointer;
-  transition:var(--transition); flex-shrink:0;
-}
-.color-chip:hover   { transform:scale(1.15); }
-.color-chip.selected { border-color:#fff; transform:scale(1.2); box-shadow:0 0 0 2px rgba(255,255,255,.15); }
-
-/* Waiter role badge */
-.staff-role-badge.waiter { background:var(--purple-bg); color:var(--purple); }
-
-/* ══ REPORT TABS ═══════════════════════════════════════ */
-.report-tab-bar {
-  display: flex; gap: 8px; padding: 14px 28px 0;
-  background: var(--bg); border-bottom: 1px solid var(--bg3); flex-shrink: 0;
-}
-.report-tab {
-  padding: 9px 20px;
-  border-radius: 10px 10px 0 0;
-  border: 1px solid transparent;
-  border-bottom: none;
-  background: transparent;
-  color: var(--text3);
-  font-family: 'DM Sans', sans-serif; font-size: 12px; font-weight: 600;
-  cursor: pointer; transition: var(--transition);
-  display: flex; align-items: center; gap: 7px;
-  position: relative; bottom: -1px;
-  letter-spacing: .3px;
-}
-.report-tab:hover { color: var(--text2); background: var(--bg3); }
-.report-tab.active {
-  background: var(--bg2);
-  color: var(--accent);
-  border-color: var(--bg4);
-  border-bottom-color: var(--bg2);
-}
-/* ═══════════════════════════════════════════════════════
-   RESPONSIVE — Tablet & Mobil Uyumluluk
-   Breakpoints:
-     ≤1100px  → tablet landscape / küçük laptop
-     ≤768px   → tablet portrait
-     ≤520px   → büyük telefon
-     ≤380px   → küçük telefon
-═══════════════════════════════════════════════════════ */
-
-/* ── TABLET LANDSCAPE (≤1100px) ─────────────────────── */
-@media (max-width: 1100px) {
-  /* Barista: 4 sütun → 2 sütun */
-  .barista-columns { grid-template-columns: repeat(2, 1fr); }
-
-  /* Raporlar: stat kartları 4 → 2 */
-  .stat-cards { grid-template-columns: repeat(2, 1fr); }
-  .coupon-stats { grid-template-columns: repeat(2, 1fr); }
-
-  /* Kupon: 2 sütun → tek */
-  .coupon-main { grid-template-columns: 1fr; }
-
-  /* Raporlar grafik: iki kolon → tek */
-  .charts-row { grid-template-columns: 1fr; }
-
-  /* Sipariş paneli biraz daha dar */
-  .order-panel { width: 280px; }
-}
-
-/* ── TABLET PORTRAIT (≤768px) ───────────────────────── */
-@media (max-width: 768px) {
-  :root {
-    --sidebar-w: 60px;
-    --topbar-h: 54px;
+/* ── STATE ─────────────────────────────────────────── */
+let currentUser    = null;
+let cart           = [];
+let orderType      = "dinein";   // "dinein" | "takeaway"
+let selectedTable  = null;
+let paymentMethod  = "cash";
+let appliedCoupon  = null;
+let editingProductId = null;
+let activeCat      = "Tümü";
+let cpCurrentFilter = "all";
+let currentMenuCat  = "";
+let selectedUserId  = null;
+let tableDetailPayment = "cash"; // masa kapatma modalındaki ödeme seçimi
+let currentView    = "pos";      // o anda ekranda gösterilen view (bulut güncellemesi için)
+
+/* ── PARA FORMATLAMA (TR) ──────────────────────────── */
+function formatMoney(n) {
+  return (Number(n) || 0).toLocaleString("tr-TR", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + " ₺";
+}
+function paymentMethodLabel(o) {
+  if (!o.paid) return "Ödenmedi";
+  return o.paymentMethod === "cash" ? "Nakit" : o.paymentMethod === "card" ? "Kart" : "Bölüşüm";
+}
+
+/* ── BOOT ──────────────────────────────────────────── */
+document.addEventListener("DOMContentLoaded", () => {
+  // Bulut verisi (varsa) gelene kadar bekle, sonra başlat.
+  // Böylece bu cihazda eski/varsayılan veri yerine diğer
+  // cihazlardaki güncel veriler gösterilir.
+  DB.ready().then(() => {
+    seedIfEmpty();
+    applyBizBranding();
+    updateClock();
+    setInterval(updateClock, 1000);
+
+    // Modal dışı tıkla kapat
+    document.querySelectorAll(".modal-overlay").forEach(el => {
+      el.addEventListener("click", e => {
+        if (e.target === el) closeModal(el.id);
+      });
+    });
+
+    // Önceki oturum
+    const saved = SessionDB.getUser();
+    if (saved) {
+      loginUser(saved);
+    } else {
+      showLockScreen();
+    }
+
+    // Bulut bağlantı durumunu göster (DevTools'a girmeden anlamak için)
+    setTimeout(() => {
+      if (window.AURA_CLOUD_STATUS === "connected") {
+        showToast("Bulut bağlantısı aktif ✓ — veriler tüm cihazlarda senkron", "green");
+      } else if (window.AURA_CLOUD_STATUS === "offline") {
+        showToast("Bulut bağlı değil — sadece bu cihazda çalışıyor (" + (window.AURA_CLOUD_STATUS_DETAIL||"") + ")", "red");
+      } else if (window.AURA_CLOUD_STATUS === "error") {
+        showToast("Bulut bağlantı hatası: " + (window.AURA_CLOUD_STATUS_DETAIL||"bilinmeyen hata"), "red");
+      }
+    }, 600);
+  });
+});
+
+// Bir veri buluta yazılamadığında kullanıcıyı uyar
+window.onCloudWriteResult = function(success, errorCode) {
+  if (!success) {
+    showToast("⚠️ Değişiklik buluta kaydedilemedi (" + errorCode + "). Sadece bu cihazda kaydedildi.", "red");
+  }
+};
+
+/* ── BULUTTAN CANLI GÜNCELLEME ───────────────────────
+   Başka bir cihaz veri değiştirdiğinde (örn. yeni sipariş,
+   menü güncellemesi) buradaki fonksiyon tetiklenir ve o anda
+   ekranda görünen view yeniden çizilir. */
+function refreshCurrentViewFromCloud() {
+  const shell = document.getElementById("appShell");
+  if (!shell || shell.style.display === "none") return; // henüz giriş yapılmadı
+  if (currentView === "pos")      renderPos();
+  if (currentView === "tables")   renderTables();
+  if (currentView === "barista")  renderBarista();
+  if (currentView === "reports")  renderReports();
+  if (currentView === "menu")     renderMenuManage();
+  if (currentView === "coupons")  renderCoupons();
+  if (currentView === "settings") renderSettings();
+}
+window.onCloudDataChanged = refreshCurrentViewFromCloud;
+
+/* ── CLOCK ─────────────────────────────────────────── */
+function updateClock() {
+  const now = new Date();
+  const ts  = now.toLocaleTimeString("tr-TR", { hour:"2-digit", minute:"2-digit" });
+  const ds  = now.toLocaleDateString("tr-TR", { weekday:"long", day:"numeric", month:"long" });
+  document.querySelectorAll(".clock-time").forEach(el => el.textContent = ts);
+  document.querySelectorAll(".clock-date").forEach(el => el.textContent = ds);
+}
+
+/* ══════════════════════════════════════════════════════
+   LOCK / AUTH
+══════════════════════════════════════════════════════ */
+function showLockScreen() {
+  document.getElementById("lockScreen").style.display = "flex";
+  document.getElementById("pinScreen").style.display  = "none";
+  document.getElementById("appShell").style.display   = "none";
+  renderStaffButtons();
+}
+
+function renderStaffButtons() {
+  const grid = document.getElementById("staffGrid");
+  if (!grid) return;
+  const users = UserDB.getAll().filter(u => u.active !== false);
+  grid.innerHTML = users.map(u => `
+    <button class="staff-btn" onclick="selectStaff('${u.id}')">
+      <div class="staff-avatar" style="background:${u.color || "#C8A96E"}">${u.avatar}</div>
+      <span class="staff-name">${u.name}</span>
+      <span class="staff-role">${roleLabel(u.role)}</span>
+    </button>
+  `).join("");
+}
+
+function selectStaff(userId) {
+  selectedUserId = userId;
+  const u = UserDB.getById(userId);
+  if (!u) return;
+  // PIN ekranına geç
+  document.getElementById("lockScreen").style.display = "none";
+  document.getElementById("pinScreen").style.display  = "flex";
+  document.getElementById("pinUserAvatar").textContent = u.avatar;
+  document.getElementById("pinUserAvatar").style.background = u.color || "#C8A96E";
+  document.getElementById("pinUserName").textContent  = u.name;
+  document.getElementById("pinUserRole").textContent  = roleLabel(u.role);
+  clearPin();
+}
+
+let pinValue = "";
+function pressPin(val) {
+  if (pinValue.length >= 4) return;
+  pinValue += val;
+  updatePinDots();
+  if (pinValue.length === 4) {
+    setTimeout(checkPin, 180);
+  }
+}
+function deletePin() {
+  pinValue = pinValue.slice(0, -1);
+  updatePinDots();
+}
+function clearPin() {
+  pinValue = "";
+  updatePinDots();
+  const err = document.getElementById("pinError");
+  if (err) err.textContent = "";
+}
+function updatePinDots() {
+  document.querySelectorAll(".pin-dot").forEach((dot, i) => {
+    dot.classList.toggle("filled", i < pinValue.length);
+  });
+}
+function checkPin() {
+  const u = UserDB.authenticate(selectedUserId, pinValue);
+  if (u) {
+    loginUser(u);
+  } else {
+    const err = document.getElementById("pinError");
+    if (err) err.textContent = "Hatalı PIN, tekrar deneyin.";
+    const card = document.getElementById("pinCard");
+    if (card) { card.style.animation = "shake .4s ease"; setTimeout(() => card.style.animation = "", 400); }
+    setTimeout(clearPin, 600);
+  }
+}
+function backToStaffSelect() {
+  document.getElementById("pinScreen").style.display  = "none";
+  document.getElementById("lockScreen").style.display = "flex";
+  clearPin();
+}
+
+function roleLabel(role) {
+  if (role === "admin")   return "Müdür";
+  if (role === "barista") return "Barista";
+  if (role === "waiter")  return "Garson";
+  return role;
+}
+
+function loginUser(u) {
+  currentUser = u;
+  SessionDB.set(u);
+  document.getElementById("lockScreen").style.display = "none";
+  document.getElementById("pinScreen").style.display  = "none";
+  document.getElementById("appShell").style.display   = "flex";
+
+  // Sidebar profil
+  document.getElementById("staffPillAvatar").textContent        = u.avatar;
+  document.getElementById("staffPillAvatar").style.background   = u.color || "";
+  document.getElementById("staffPillAvatar").style.color        = "#0a0a0a";
+  document.getElementById("staffPillName").textContent          = u.name;
+  document.getElementById("staffPillRole").textContent          = roleLabel(u.role);
+
+  // Nav görünürlüğü — 3 rol:
+  // admin:   hepsi
+  // barista: pos, tables, barista
+  // waiter:  pos, tables
+  const navBarista  = document.getElementById("nav-barista");
+  const navReports  = document.getElementById("nav-reports");
+  const navMenu     = document.getElementById("nav-menu");
+  const navCoupons  = document.getElementById("nav-coupons");
+  const navSettings = document.getElementById("nav-settings");
+
+  if (u.role === "admin") {
+    [navBarista, navReports, navMenu, navCoupons, navSettings].forEach(el => el && (el.style.display = "flex"));
+  } else if (u.role === "barista") {
+    navBarista  && (navBarista.style.display  = "flex");
+    navReports  && (navReports.style.display  = "none");
+    navMenu     && (navMenu.style.display     = "none");
+    navCoupons  && (navCoupons.style.display  = "none");
+    navSettings && (navSettings.style.display = "none");
+  } else {
+    // waiter
+    [navBarista, navReports, navMenu, navCoupons, navSettings].forEach(el => el && (el.style.display = "none"));
   }
 
-  /* Sidebar daha dar, label'lar gizlenir */
-  .sidebar { width: var(--sidebar-w); padding: 12px 0; gap: 2px; }
-  .sidebar-logo { width: 38px; height: 38px; font-size: 16px; border-radius: 10px; margin-bottom: 8px; }
-  .nav-btn .nav-label { display: none; }
-  .nav-btn { font-size: 16px; }
-
-  /* POS: dikey layout — menü üstte, sipariş altta */
-  .pos-body {
-    flex-direction: column;
-    overflow: hidden;
-  }
-  .menu-panel { flex: 1; overflow: hidden; min-height: 0; }
-  .order-panel {
-    width: 100%;
-    height: auto;
-    max-height: 42vh;
-    border-left: none;
-    border-top: var(--border);
-    flex-direction: column;
-    overflow-y: auto;
-  }
-
-  /* Sipariş paneli içeriği: yatay scroll ile kısa tut */
-  .order-list { max-height: 120px; overflow-y: auto; }
-  .order-empty { height: 110px; } /* "Sepet boş" mesajı kırpılmasın */
-  .order-note-wrap { display: none; } /* Tablette gizle, alan dar */
-
-  /* Topbar */
-  .topbar { padding: 0 14px; height: var(--topbar-h); }
-  .topbar-title { font-size: 15px; }
-  .topbar-time { display: none; }
-
-  /* Arama kutusu daha dar */
-  .search-box { width: 180px; }
-
-  /* Ürün grid */
-  .product-grid { grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 8px; }
-  .product-scroll { padding: 10px 14px 14px; }
-  .cat-tabs { padding: 12px 14px 0; }
-
-  /* Masalar */
-  .tables-body { padding: 16px; gap: 20px; }
-  .table-card { width: 96px; height: 96px; }
-  .table-num { font-size: 18px; }
-
-  /* Raporlar */
-  .reports-body { padding: 14px; }
-  .stat-cards { grid-template-columns: repeat(2, 1fr); gap: 10px; }
-  .stat-val { font-size: 18px; }
-
-  /* Barista: tek sütun */
-  .barista-columns { grid-template-columns: 1fr 1fr; }
-  .barista-body { padding: 12px; }
-
-  /* Menü yönetimi */
-  .mm-cat-list { width: 160px; }
-
-  /* Ayarlar */
-  .settings-body { padding: 14px; }
-  .settings-section { padding: 16px; }
-
-  /* Kupon */
-  .coupon-body { padding: 14px; }
-
-  /* Modallar */
-  .modal { padding: 28px 24px; max-width: 96vw; }
+  switchView("pos");
 }
 
-/* ── BÜYÜK TELEFON (≤520px) ─────────────────────────── */
-@media (max-width: 520px) {
-  :root {
-    --sidebar-w: 0px;
-    --topbar-h: 52px;
-    --bottom-nav-h: calc(58px + env(safe-area-inset-bottom, 0px));
-  }
-
-  /* Sidebar: alta geçer (bottom nav) */
-  .app { flex-direction: column; }
-
-  .sidebar {
-    width: 100%;
-    height: var(--bottom-nav-h);
-    padding-bottom: env(safe-area-inset-bottom, 0px); /* home indicator alanı */
-    flex-direction: row;
-    align-items: center;
-    justify-content: space-around;
-    border-right: none;
-    border-top: var(--border);
-    padding-top: 0; padding-left: 8px; padding-right: 8px;
-    order: 2;                    /* App shellde alta it */
-    gap: 0;
-    flex-shrink: 0;
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    z-index: 100;
-    background: var(--bg2);
-  }
-  .sidebar-logo { display: none; }
-  .sidebar-nav {
-    flex-direction: row;
-    flex: 1;
-    padding: 0;
-    gap: 0;
-    justify-content: space-around;
-    align-items: center;
-    width: 100%;
-  }
-  .nav-btn {
-    flex: 1;
-    aspect-ratio: unset;
-    height: 50px;
-    border-radius: var(--r-sm);
-    font-size: 17px;
-    gap: 2px;
-  }
-  .nav-btn .nav-label { display: block; font-size: 8px; }
-  .sidebar-bottom {
-    display: none; /* Bottom nav'da logout, settings sidebar'dan gelecek */
-  }
-
-  /* Views wrapper tam yükseklik eksi bottom nav */
-  .app > div[style*="flex:1"] {
-    order: 1;
-    height: calc(100vh - var(--bottom-nav-h));
-    padding-bottom: 0;
-  }
-
-  /* Uzun toast mesajları (örn. bulut bağlantı bildirimi) dar ekranda
-     taşmasın diye satır kırabilsin ve ekran genişliğini aşmasın */
-  .toast {
-    white-space: normal; max-width: 90vw; text-align: center;
-    border-radius: var(--r-lg);
-  }
-
-  /* Sabit bottom nav için içerik alanını pad et */
-  .view { padding-bottom: 0; }
-  .pos-body { height: calc(100vh - var(--bottom-nav-h) - var(--topbar-h)); }
-
-  /* POS: dikey */
-  .pos-body { flex-direction: column; }
-  .menu-panel { flex: 1; min-height: 0; overflow: hidden; }
-  .order-panel {
-    width: 100%;
-    max-height: 44vh;
-    border-left: none;
-    border-top: var(--border);
-    overflow-y: auto;
-    flex-shrink: 0;
-  }
-
-  /* Sipariş listesi kısa */
-  .order-list { max-height: 100px; }
-  .order-empty { height: 90px; font-size: 12px; }
-  .order-empty .order-empty-icon { font-size: 26px; }
-  .order-note-wrap { display: none; }
-  .discount-wrap { display: none; }
-
-  /* Ürünler */
-  .product-grid { grid-template-columns: repeat(auto-fill, minmax(118px, 1fr)); gap: 8px; }
-  .product-scroll { padding: 8px 12px 12px; }
-  .cat-tabs { padding: 10px 12px 0; }
-  .cat-tab { padding: 7px 12px; font-size: 12px; }
-  .product-card { padding: 12px 10px 10px; }
-  .product-emoji { font-size: 26px; }
-  .product-name { font-size: 12px; }
-  .product-desc { display: none; }
-  .product-price { font-size: 13px; }
-
-  /* Topbar */
-  .topbar { padding: 0 12px; gap: 10px; }
-  .topbar-title { font-size: 14px; }
-  .search-box { width: 140px; }
-  .topbar-time { display: none; }
-  .topbar-btn span { display: none; } /* Metinleri gizle, sadece ikon */
-  .topbar-btn { padding: 0 10px; }
-
-  /* Barista: mobilde 2 sütun scroll */
-  .barista-columns {
-    grid-template-columns: repeat(2, 280px);
-    overflow-x: auto;
-    height: auto;
-    min-height: 100%;
-  }
-  .barista-body { overflow-x: auto; padding: 10px; }
-
-  /* Masalar */
-  .tables-body { padding: 12px; gap: 16px; }
-  .tables-grid { gap: 10px; }
-  .table-card { width: 88px; height: 88px; }
-  .table-num { font-size: 16px; }
-  .table-status { font-size: 9px; }
-
-  /* Raporlar */
-  .reports-body { padding: 10px; }
-  .stat-cards { grid-template-columns: repeat(2, 1fr); gap: 8px; }
-  .stat-card { padding: 12px; gap: 10px; }
-  .stat-icon { width: 36px; height: 36px; font-size: 14px; }
-  .stat-val { font-size: 16px; }
-  .stat-label { font-size: 10px; }
-
-  /* Menü yönetimi: kategori listesi gizle, sadece ürünler */
-  .menu-manage-body { flex-direction: column; }
-  .mm-cat-list {
-    width: 100%;
-    flex-direction: row;
-    border-right: none;
-    border-bottom: var(--border);
-    padding: 8px;
-    overflow-x: auto;
-    flex-wrap: nowrap;
-    max-height: 56px;
-    gap: 6px;
-  }
-  .mm-cat-btn { white-space: nowrap; flex-shrink: 0; }
-
-  /* Ayarlar */
-  .settings-body { padding: 10px; }
-  .settings-section { padding: 14px; }
-  .settings-row { flex-direction: column; align-items: flex-start; gap: 8px; }
-  .settings-edit-btn { align-self: flex-end; }
-
-  /* Kupon */
-  .coupon-body { padding: 10px; gap: 12px; }
-  .coupon-stats { grid-template-columns: repeat(2, 1fr); gap: 8px; }
-  .cp-stat { padding: 12px; gap: 10px; }
-  .cp-stat-val { font-size: 18px; }
-  .cp-input-row3 { grid-template-columns: 1fr 1fr; }
-
-  /* Kupon kartı: dar ekranda 3 sabit-genişlikli kolon sıkışıp taşabiliyordu —
-     kod+değer üst sırada, açıklama ve aksiyonlar alt sırada gösterilir */
-  .cp-card-main { flex-wrap: wrap; }
-  .cp-card-code {
-    flex: 1 1 50%; min-width: 0; border-right: none;
-    border-bottom: var(--border2);
-  }
-  .cp-card-value {
-    flex: 1 1 50%; min-width: 0; border-left: var(--border2);
-    border-bottom: var(--border2);
-  }
-  .cp-card-details { flex: 1 1 100%; order: 3; }
-  .cp-card-actions {
-    flex: 1 1 100%; order: 4; flex-direction: row;
-    justify-content: flex-end; border-left: none; border-top: var(--border2);
-  }
-
-  /* Lock screen */
-  .lock-card { padding: 32px 24px 28px; }
-  .lock-title { font-size: 24px; }
-  .staff-grid { grid-template-columns: 1fr 1fr; gap: 8px; }
-  .staff-btn { padding: 12px 8px; }
-  .staff-avatar { width: 36px; height: 36px; font-size: 15px; }
-
-  /* Modallar mobilde */
-  .modal { 
-    padding: 0; 
-    max-width: 100vw; 
-    width: 100%;
-    border-radius: var(--r-lg) var(--r-lg) 0 0;
-    margin-top: auto;
-    max-height: 90vh;
-    overflow-y: auto;
-  }
-  .modal-overlay {
-    align-items: flex-end;
-  }
-  .modal-overlay.open .modal {
-    transform: scale(1) translateY(0);
-  }
-  .modal-body { padding: 16px; gap: 12px; }
-  .modal-header { padding: 16px 16px 12px; }
-  .modal-footer { padding: 12px 16px; }
-  .form-row { flex-direction: column; gap: 10px; }
-  .success-modal { padding: 28px 20px; }
-
-  /* Rapor tab bar */
-  .report-tab { padding: 7px 12px; font-size: 11px; }
-  .report-tab i { display: none; }
+function logout() {
+  SessionDB.clear();
+  currentUser = null;
+  cart = [];
+  orderType = "dinein";
+  selectedTable = null;
+  appliedCoupon = null;
+  showLockScreen();
 }
 
-/* ── KÜÇÜK TELEFON (≤380px) ─────────────────────────── */
-@media (max-width: 380px) {
-  .product-grid { grid-template-columns: repeat(2, 1fr); }
-  .product-card { padding: 10px 8px 8px; }
-  .product-emoji { font-size: 22px; }
-  .product-name { font-size: 11px; }
-  .add-btn { width: 24px; height: 24px; font-size: 14px; }
+/* ══════════════════════════════════════════════════════
+   VIEW SWITCHING
+══════════════════════════════════════════════════════ */
+const VIEWS = ["pos","tables","barista","reports","menu","coupons","settings"];
 
-  .table-card { width: 80px; height: 80px; }
+function switchView(v) {
+  // Erişim kontrolü
+  const role = currentUser ? currentUser.role : "waiter";
+  const allowed = {
+    admin:   ["pos","tables","barista","reports","menu","coupons","settings"],
+    barista: ["pos","tables","barista"],
+    waiter:  ["pos","tables"],
+  };
+  if (!(allowed[role] || []).includes(v)) {
+    showToast("Bu alana erişim yetkiniz yok.", "red");
+    return;
+  }
+  VIEWS.forEach(name => {
+    const el = document.getElementById("view-" + name);
+    if (el) el.style.display = name === v ? "flex" : "none";
+    const nb = document.getElementById("nav-" + name);
+    if (nb) nb.classList.toggle("active", name === v);
+  });
+  currentView = v;
 
-  .stat-cards { grid-template-columns: 1fr 1fr; }
-  .stat-val { font-size: 15px; }
-
-  .lock-title { font-size: 20px; }
-  .lock-card { padding: 24px 16px 20px; }
-  .pin-card { padding: 24px 20px 28px; }
-  .pin-btn { height: 46px; font-size: 18px; }
-
-  .order-panel { max-height: 40vh; }
-  .nav-btn .nav-label { display: none; }
+  if (v === "pos")      { renderPos(); }
+  if (v === "tables")   { renderTables(); }
+  if (v === "barista")  { renderBarista(); }
+  if (v === "reports")  { renderReports(); }
+  if (v === "menu")     { currentMenuCat = ""; renderMenuManage(); }
+  if (v === "coupons")  { renderCoupons(); }
+  if (v === "settings") { renderSettings(); }
 }
 
-/* ── LANDSCAPE KÜÇÜK EKRAN (yatay telefon) ──────────── */
-@media (max-width: 768px) and (orientation: landscape) and (max-height: 480px) {
-  .sidebar {
-    height: 48px;
-  }
-  .nav-btn { height: 44px; }
-  .nav-btn .nav-label { display: none; }
-
-  .order-panel { max-height: 35vh; }
-  .order-list { max-height: 80px; }
-  .order-empty { height: 70px; font-size: 11px; }
-  .order-empty .order-empty-icon { font-size: 22px; }
-
-  .lock-card { padding: 16px 24px; }
-  .lock-logo { width: 44px; height: 44px; margin-bottom: 8px; }
-  .lock-title { font-size: 20px; }
-  .lock-subtitle { margin-bottom: 16px; }
-  .staff-grid { grid-template-columns: repeat(4, 1fr); }
-
-  .stat-cards { grid-template-columns: repeat(4, 1fr); }
+/* ══════════════════════════════════════════════════════
+   POS VIEW
+══════════════════════════════════════════════════════ */
+function renderPos() {
+  applyOrderTypeUI();
+  renderCatTabs();
+  renderProductGrid();
+  renderOrderPanel();
 }
 
-/* ── BÜYÜK EKRAN / 4K (≥1600px) ────────────────────── */
-@media (min-width: 1600px) {
-  .product-grid { grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); }
-  .stat-cards { grid-template-columns: repeat(4, 1fr); }
-  .order-panel { width: 340px; }
-  .barista-columns { grid-template-columns: repeat(4, 1fr); }
+function renderCatTabs() {
+  const cats = ["Tümü", ...MenuDB.getCategories()];
+  const container = document.getElementById("catTabs");
+  if (!container) return;
+  container.innerHTML = cats.map(c => {
+    const count = c === "Tümü" ? MenuDB.getAll().length : MenuDB.getByCategory(c).length;
+    return `<button class="cat-tab ${c === activeCat ? "active" : ""}" onclick="setCat('${c}')">
+      ${c} <span class="cat-count">${count}</span>
+    </button>`;
+  }).join("");
 }
 
-/* ── TOUCH DOKUNMATIK İYİLEŞTİRMELER ───────────────── */
-@media (hover: none) and (pointer: coarse) {
-  /* iOS Safari, 16px altı font boyutlu input'lara odaklanınca otomatik
-     yakınlaştırma yapar — dokunmatik cihazlarda tüm form alanlarını
-     16px yaparak bunu engelliyoruz (masaüstü kompakt boyutu etkilenmez) */
-  input, select, textarea { font-size: 16px !important; }
-
-  /* Butonları dokunmatik için büyüt */
-  .nav-btn { min-height: 44px; }
-  .pin-btn { min-height: 52px; }
-  .cat-tab { padding: 10px 16px; }
-  .qty-btn { width: 28px; height: 28px; }
-  .staff-action-btn { width: 38px; height: 38px; }
-  .cp-action-btn { width: 38px; height: 38px; }
-  .mm-edit-btn { width: 36px; height: 36px; }
-  .topbar-btn { height: 42px; }
-
-  /* Hover efektlerini kaldır (dokunmatikta takılı kalır) */
-  .product-card:hover { transform: none; }
-  .table-card:hover { transform: none; }
-  .stat-card:hover { transform: none; }
-  .cp-stat:hover { transform: none; }
-  .confirm-btn:hover:not(:disabled) { transform: none; }
-  .cp-add-btn:hover { transform: none; }
-  .topbar-btn:hover { transform: none; }
+function setCat(cat) {
+  activeCat = cat;
+  renderCatTabs();
+  renderProductGrid();
 }
 
-/* ── YAZDIRMA ────────────────────────────────────────── */
-@media print {
-  .sidebar, .topbar, .order-panel, .cat-tabs,
-  .modal-overlay, .toast, .topbar-btn { display: none !important; }
-  .app { display: block; }
-  .view { display: block !important; }
-  body { background: white; color: black; }
+function filterProducts() {
+  renderProductGrid();
 }
 
-/* ── MOBİL VIEWS WRAPPER ────────────────────────────── */
-@media (max-width: 520px) {
-  /* App içindeki views wrapper'ı bottom nav'ın üstüne sığdır */
-  .app {
-    flex-direction: column;
-    height: 100vh;
-    height: 100dvh; /* Dynamic viewport height — mobil URL bar ile uyumlu */
+function renderProductGrid() {
+  const search = (document.getElementById("posSearch")?.value || "").toLowerCase();
+  let items = activeCat === "Tümü" ? MenuDB.getAll() : MenuDB.getByCategory(activeCat);
+  if (search) items = items.filter(p => p.name.toLowerCase().includes(search) || p.desc.toLowerCase().includes(search));
+  const grid = document.getElementById("productGrid");
+  if (!grid) return;
+  if (items.length === 0) {
+    grid.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:40px;color:var(--text3);font-size:13px;">
+      <div style="font-size:32px;margin-bottom:8px;">🔍</div>Ürün bulunamadı</div>`;
+    return;
+  }
+  grid.innerHTML = items.map(p => `
+    <div class="product-card ${p.available === false ? "unavailable" : ""}" onclick="addToCart(${p.id})">
+      <div class="card-top-row">
+        <span class="product-emoji">${p.emoji}</span>
+        ${p.popular ? '<span class="popular-badge">⭐ Popüler</span>' : ""}
+      </div>
+      <div class="product-name">${p.name}</div>
+      <div class="product-desc">${p.desc}</div>
+      <div class="card-footer">
+        <span class="product-price">${formatMoney(p.price)}</span>
+        <button class="add-btn" onclick="event.stopPropagation();addToCart(${p.id})">+</button>
+      </div>
+    </div>
+  `).join("");
+}
+
+function addToCart(productId) {
+  const p = MenuDB.getById(productId);
+  if (!p) return;
+  const existing = cart.find(i => i.id === productId);
+  if (existing) {
+    existing.qty++;
+  } else {
+    cart.push({ id: p.id, name: p.name, emoji: p.emoji, price: p.price, qty: 1 });
+  }
+  renderOrderPanel();
+  showToast(`${p.emoji} ${p.name} eklendi`);
+}
+
+function changeQty(productId, delta) {
+  const idx = cart.findIndex(i => i.id === productId);
+  if (idx < 0) return;
+  cart[idx].qty += delta;
+  if (cart[idx].qty <= 0) cart.splice(idx, 1);
+  renderOrderPanel();
+}
+
+function clearOrder() {
+  cart = [];
+  appliedCoupon = null;
+  renderOrderPanel();
+}
+
+/* ── Sipariş Tipi: Masada / Paket ───────────────────── */
+function setOrderType(type) {
+  orderType = type;
+  if (type === "takeaway") selectedTable = null;
+  applyOrderTypeUI();
+  renderOrderPanel();
+}
+
+function applyOrderTypeUI() {
+  document.getElementById("ot-dinein")?.classList.toggle("active", orderType === "dinein");
+  document.getElementById("ot-takeaway")?.classList.toggle("active", orderType === "takeaway");
+  const tableBtn = document.getElementById("tableSelectBtn");
+  const paymentSection = document.getElementById("paymentSection");
+  const dineinNote = document.getElementById("dineinNote");
+  if (tableBtn) tableBtn.style.display = orderType === "dinein" ? "flex" : "none";
+  if (paymentSection) paymentSection.style.display = orderType === "takeaway" ? "block" : "none";
+  if (dineinNote) dineinNote.style.display = orderType === "dinein" ? "flex" : "none";
+}
+
+function renderOrderPanel() {
+  // Sipariş no
+  const settings = DB.get(DB_KEYS.SETTINGS) || { orderCounter:40 };
+  document.getElementById("orderBadge").textContent = "#" + (settings.orderCounter + 1);
+
+  // Seçili masa
+  const tableLabel = document.getElementById("selectedTableLabel");
+  if (tableLabel) {
+    tableLabel.textContent = selectedTable
+      ? `Masa ${selectedTable.num} — ${selectedTable.zone}`
+      : "Masa Seç";
+  }
+  const tableBtn = document.getElementById("tableSelectBtn");
+  if (tableBtn) tableBtn.classList.toggle("warn", orderType === "dinein" && !selectedTable);
+
+  // Liste
+  const list = document.getElementById("orderList");
+  if (!list) return;
+  if (cart.length === 0) {
+    list.innerHTML = `<div class="order-empty"><div class="order-empty-icon">🛒</div><p>Sepet boş</p></div>`;
+  } else {
+    list.innerHTML = cart.map(item => `
+      <div class="order-item">
+        <span class="oi-emoji">${item.emoji}</span>
+        <div class="oi-info">
+          <div class="oi-name">${item.name}</div>
+          <div class="oi-price">${formatMoney(item.price * item.qty)}</div>
+        </div>
+        <div class="oi-qty">
+          <button class="qty-btn minus" onclick="changeQty(${item.id},-1)">−</button>
+          <span class="qty-num">${item.qty}</span>
+          <button class="qty-btn" onclick="changeQty(${item.id},1)">+</button>
+        </div>
+      </div>
+    `).join("");
   }
 
-  /* Sidebar bottom'a fixed — views bottom-nav kadar kısa olmalı */
-  .app > aside { order: 2; }
+  // Toplamlar
+  const subtotal = cart.reduce((s, i) => s + i.price * i.qty, 0);
+  let discount = 0;
+  if (appliedCoupon) {
+    if (appliedCoupon.type === "percent") {
+      discount = subtotal * appliedCoupon.value / 100;
+    } else {
+      discount = Math.min(appliedCoupon.value, subtotal);
+    }
+  }
+  const total = Math.max(0, subtotal - discount);
 
-  /* Views container — sidebar hariç kalan alan (home indicator dahil) */
-  .view {
-    height: calc(100dvh - var(--bottom-nav-h) - var(--topbar-h));
+  document.getElementById("subtotalDisplay").textContent = formatMoney(subtotal);
+  document.getElementById("totalDisplay").textContent    = formatMoney(total);
+  document.getElementById("confirmTotal").textContent    = formatMoney(total);
+
+  const discountRow = document.getElementById("discountRow");
+  if (discountRow) {
+    discountRow.style.display = discount > 0 ? "flex" : "none";
+    document.getElementById("discountDisplay").textContent = "- " + formatMoney(discount);
   }
 
-  .pos-body {
-    height: calc(100dvh - var(--bottom-nav-h) - var(--topbar-h));
+  // Onay butonu: sepet boşsa VEYA masada sipariş için masa seçilmemişse pasif
+  const needsTable = orderType === "dinein" && !selectedTable;
+  document.getElementById("confirmBtn").disabled = cart.length === 0 || needsTable;
+
+  const btnLabel = document.getElementById("confirmBtnLabel");
+  if (btnLabel) {
+    btnLabel.textContent = orderType === "takeaway" ? "Siparişi Tamamla ve Öde" : "Siparişi Mutfağa Gönder";
+  }
+}
+
+/* ── Ödeme yöntemi ─────────────────────────────────── */
+function selectPayment(method) {
+  paymentMethod = method;
+  ["cash","card","split"].forEach(m => {
+    document.getElementById("pm-" + m)?.classList.toggle("active", m === method);
+  });
+}
+
+/* ── İndirim / Kupon ───────────────────────────────── */
+function toggleDiscount() {
+  const box = document.getElementById("discountBox");
+  if (box) box.style.display = box.style.display === "none" ? "block" : "none";
+}
+
+function applyCoupon() {
+  const code = document.getElementById("couponInput")?.value.trim().toUpperCase();
+  const msg  = document.getElementById("couponMsg");
+  if (!code) return;
+
+  const subtotal = cart.reduce((s, i) => s + i.price * i.qty, 0);
+  const c = CouponDB.getByCode(code);
+
+  if (!c) {
+    if (msg) { msg.textContent = "❌ Geçersiz veya pasif kupon."; msg.style.color = "var(--red)"; }
+    return;
+  }
+  if (c.min && subtotal < c.min) {
+    if (msg) { msg.textContent = `⚠️ Min. ${formatMoney(c.min)} sepet gerekli.`; msg.style.color = "var(--orange)"; }
+    return;
+  }
+  if (c.limit && c.usedCount >= c.limit) {
+    if (msg) { msg.textContent = "❌ Kupon kullanım limitine ulaşıldı."; msg.style.color = "var(--red)"; }
+    return;
   }
 
-  /* Scrollable view bodies — bottom nav'ın üstünde rahat nefes payı */
-  .tables-body,
-  .reports-body,
-  .settings-body,
-  .coupon-body,
-  .barista-body,
-  .mm-product-list {
-    padding-bottom: 16px;
+  appliedCoupon = c;
+  if (msg) {
+    const disc = c.type === "percent" ? `%${c.value} indirim` : `${formatMoney(c.value)} indirim`;
+    msg.textContent = `✅ ${disc} uygulandı!`;
+    msg.style.color = "var(--green)";
   }
+  const removeBtn = document.getElementById("removeDiscount");
+  if (removeBtn) removeBtn.style.display = "inline-block";
+  renderOrderPanel();
+}
+
+function removeDiscount() {
+  appliedCoupon = null;
+  const inp = document.getElementById("couponInput");
+  const msg = document.getElementById("couponMsg");
+  const btn = document.getElementById("removeDiscount");
+  if (inp) inp.value = "";
+  if (msg) msg.textContent = "";
+  if (btn) btn.style.display = "none";
+  renderOrderPanel();
+}
+
+/* ── Siparişi Onayla ──────────────────────────────── */
+function confirmOrder() {
+  if (cart.length === 0) return;
+  if (orderType === "dinein" && !selectedTable) {
+    showToast("Lütfen önce bir masa seçin.", "red");
+    return;
+  }
+
+  const subtotal = cart.reduce((s, i) => s + i.price * i.qty, 0);
+  let discount = 0;
+  if (appliedCoupon) {
+    discount = appliedCoupon.type === "percent"
+      ? subtotal * appliedCoupon.value / 100
+      : Math.min(appliedCoupon.value, subtotal);
+  }
+  const total = Math.max(0, subtotal - discount);
+  const orderNum = OrderDB.nextCounter();
+  const note = document.getElementById("orderNote")?.value || "";
+  const isTakeaway = orderType === "takeaway";
+
+  const order = {
+    id: "ord_" + Date.now(),
+    num: orderNum,
+    orderType,
+    tableId: isTakeaway ? null : selectedTable.id,
+    tableLabel: isTakeaway ? "Paket" : `Masa ${selectedTable.num}`,
+    items: cart.map(i => ({ ...i })),
+    subtotal,
+    discount,
+    total,
+    paymentMethod: isTakeaway ? paymentMethod : null,
+    paid: isTakeaway,   // Paket: peşin ödenir. Masada: ödeme masa kapanırken alınır.
+    couponCode: appliedCoupon?.code || null,
+    note,
+    status: "pending",
+    createdAt: new Date().toISOString(),
+    userId: currentUser?.id || null,
+  };
+
+  OrderDB.add(order);
+
+  // Masa durumunu güncelle (dolu)
+  if (!isTakeaway) {
+    TableDB.update(selectedTable.id, { status:"occupied" });
+  }
+
+  // Kupon kullanım sayısını artır
+  if (appliedCoupon) CouponDB.use(appliedCoupon.code);
+
+  // Başarı modalı
+  document.getElementById("successOrderNum").textContent = "#" + orderNum;
+  document.getElementById("successDetails").innerHTML = isTakeaway
+    ? `${order.tableLabel} &nbsp;|&nbsp; ${cart.reduce((s,i)=>s+i.qty,0)} ürün<br>
+       <strong style="color:var(--accent);font-family:'Syne',sans-serif;font-size:18px">${formatMoney(total)}</strong>
+       &nbsp;(${paymentMethod === "cash" ? "Nakit" : paymentMethod === "card" ? "Kart" : "Bölüşüm"})`
+    : `${order.tableLabel} &nbsp;|&nbsp; ${cart.reduce((s,i)=>s+i.qty,0)} ürün<br>
+       <strong style="color:var(--accent);font-family:'Syne',sans-serif;font-size:18px">${formatMoney(total)}</strong>
+       <br><span style="color:var(--text3);font-size:11px">Ödeme, masa kapanırken alınacak</span>`;
+  // Fiş yazdırma için son siparişi sakla
+  window._lastPrintOrder = order;
+  openModal("successModal");
+
+  // Sepeti temizle
+  cart = [];
+  appliedCoupon = null;
+  if (isTakeaway) selectedTable = null;   // Masada sipariş için masa seçimi korunur (yeni tur eklenebilir)
+  if (document.getElementById("orderNote")) document.getElementById("orderNote").value = "";
+  renderOrderPanel();
+  updateCouponNavBadge();
+}
+
+/* ══════════════════════════════════════════════════════
+   TABLES VIEW
+══════════════════════════════════════════════════════ */
+function renderTables() {
+  const body = document.getElementById("tablesBody");
+  if (!body) return;
+  const tables = TableDB.getAll();
+  const zones  = [...new Set(tables.map(t => t.zone))];
+
+  body.innerHTML = zones.map(zone => {
+    const zoneTables = tables.filter(t => t.zone === zone);
+    return `
+      <div class="zone-section">
+        <div class="zone-title"><i class="fa-solid fa-location-dot"></i> ${zone}</div>
+        <div class="tables-grid">
+          ${zoneTables.map(t => tableCardHTML(t)).join("")}
+        </div>
+      </div>
+    `;
+  }).join("");
+}
+
+function tableCardHTML(t) {
+  let statusLabel = "Boş";
+  let statusClass = "free";
+  let totalText   = "";
+
+  const openOrders = OrderDB.getOpenByTable(t.id);
+  if (openOrders.length > 0) {
+    statusLabel = "Dolu"; statusClass = "occupied";
+    const runningTotal = openOrders.reduce((s, o) => s + o.total, 0);
+    totalText = `<div class="table-total">${formatMoney(runningTotal)}</div>`;
+  } else if (t.status === "waiting") {
+    statusLabel = "Bekliyor"; statusClass = "waiting";
+  }
+
+  return `
+    <div class="table-card ${statusClass}" onclick="onTableClick('${t.id}')">
+      <div class="table-capacity"><i class="fa-solid fa-user"></i>${t.cap}</div>
+      <div class="table-num">${t.num}</div>
+      <div class="table-status ${statusClass}">${statusLabel}</div>
+      ${totalText}
+    </div>
+  `;
+}
+
+function onTableClick(tableId) {
+  const t = TableDB.getById(tableId);
+  if (!t) return;
+
+  // POS'tan masa seçme modunda mı?
+  const fromPOS = window._selectingTable;
+  if (fromPOS) {
+    selectedTable = t;
+    orderType = "dinein";
+    window._selectingTable = false;
+    switchView("pos");
+    showToast(`Masa ${t.num} seçildi (${t.zone})`);
+    return;
+  }
+
+  // Açık hesabı olan masaya tıklandığında hesap detayını göster
+  const openOrders = OrderDB.getOpenByTable(t.id);
+  if (openOrders.length > 0) {
+    showTableDetail(t);
+  } else {
+    // Boş masayı POS'ta seç
+    selectedTable = t;
+    orderType = "dinein";
+    switchView("pos");
+    showToast(`Masa ${t.num} seçildi`);
+  }
+}
+
+function showTableDetail(t) {
+  const openOrders = OrderDB.getOpenByTable(t.id);
+  if (openOrders.length === 0) return;
+
+  tableDetailPayment = "cash";
+  const body = document.getElementById("tableDetailBody");
+  const titleEl = document.getElementById("tableDetailTitle");
+  if (titleEl) titleEl.textContent = `Masa ${t.num} — ${t.zone}`;
+
+  const subtotal = openOrders.reduce((s, o) => s + o.subtotal, 0);
+  const discount = openOrders.reduce((s, o) => s + o.discount, 0);
+  const total    = openOrders.reduce((s, o) => s + o.total, 0);
+
+  if (body) {
+    body.innerHTML = `
+      <div style="padding:16px 24px 4px;display:flex;align-items:center;gap:8px;">
+        <span style="font-size:11px;background:var(--orange-bg);color:var(--orange);padding:2px 8px;border-radius:6px;font-weight:600;">Açık Hesap</span>
+        <span style="font-size:11px;color:var(--text3);">${openOrders.length} sipariş</span>
+      </div>
+      <div style="padding:8px 24px;flex:1;overflow-y:auto;">
+        ${openOrders.map(order => `
+          <div style="margin-bottom:12px;padding-bottom:10px;border-bottom:1px solid var(--bg4);">
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
+              <span style="font-family:'Syne',sans-serif;font-size:13px;font-weight:700;color:var(--accent);">#${order.num}</span>
+              <span style="font-size:11px;color:var(--text3);">${new Date(order.createdAt).toLocaleTimeString("tr-TR",{hour:"2-digit",minute:"2-digit"})}</span>
+            </div>
+            ${order.items.map(i => `
+              <div style="display:flex;justify-content:space-between;padding:5px 0;font-size:13px;color:var(--text2);">
+                <span>${i.emoji} ${i.name} <span style="color:var(--text3)">×${i.qty}</span></span>
+                <span style="color:var(--text)">${formatMoney(i.price * i.qty)}</span>
+              </div>
+            `).join("")}
+            ${order.note ? `<div style="background:var(--orange-bg);color:var(--orange);font-size:12px;padding:7px 10px;border-radius:8px;margin-top:6px;font-style:italic;">📝 ${order.note}</div>` : ""}
+          </div>
+        `).join("")}
+      </div>
+      <div style="padding:12px 24px;border-top:var(--border);">
+        <div style="display:flex;justify-content:space-between;font-size:13px;color:var(--text2);margin-bottom:4px;">
+          <span>Ara Toplam</span><span>${formatMoney(subtotal)}</span>
+        </div>
+        ${discount > 0 ? `<div style="display:flex;justify-content:space-between;font-size:13px;color:var(--green);margin-bottom:4px;"><span>İndirim</span><span>- ${formatMoney(discount)}</span></div>` : ""}
+        <div style="display:flex;justify-content:space-between;font-family:'Syne',sans-serif;font-size:16px;font-weight:700;color:var(--text);padding-top:8px;border-top:1px solid var(--bg5);">
+          <span>Toplam</span><span style="color:var(--accent)">${formatMoney(total)}</span>
+        </div>
+      </div>
+      <div style="padding:4px 24px 12px;border-top:var(--border);">
+        <div style="font-size:10px;color:var(--text3);letter-spacing:1px;text-transform:uppercase;margin:10px 0 8px;">Ödeme Yöntemi</div>
+        <div class="payment-methods">
+          <button class="pay-method active" id="td-pm-cash" onclick="selectTableDetailPayment('cash')">
+            <i class="fa-solid fa-money-bill-wave"></i> Nakit
+          </button>
+          <button class="pay-method" id="td-pm-card" onclick="selectTableDetailPayment('card')">
+            <i class="fa-solid fa-credit-card"></i> Kart
+          </button>
+          <button class="pay-method" id="td-pm-split" onclick="selectTableDetailPayment('split')">
+            <i class="fa-solid fa-divide"></i> Bölüşüm
+          </button>
+        </div>
+      </div>
+      <div style="padding:0 24px 20px;display:flex;gap:10px;">
+        <button class="modal-btn secondary" style="flex:1" onclick="addOrderToTable('${t.id}')">
+          <i class="fa-solid fa-plus"></i> Sipariş Ekle
+        </button>
+        <button class="modal-btn accent" style="flex:1" onclick="closeTableAndClear('${t.id}')">
+          <i class="fa-solid fa-check"></i> Öde ve Kapat
+        </button>
+      </div>
+    `;
+  }
+  openModal("tableDetailModal");
+}
+
+function selectTableDetailPayment(method) {
+  tableDetailPayment = method;
+  ["cash","card","split"].forEach(m => {
+    document.getElementById("td-pm-" + m)?.classList.toggle("active", m === method);
+  });
+}
+
+function addOrderToTable(tableId) {
+  const t = TableDB.getById(tableId);
+  if (!t) return;
+  selectedTable = t;
+  orderType = "dinein";
+  closeModal("tableDetailModal");
+  switchView("pos");
+  showToast(`Masa ${t.num} için yeni sipariş ekleniyor`);
+}
+
+function closeTableAndClear(tableId) {
+  const openOrders = OrderDB.getOpenByTable(tableId);
+  if (openOrders.length === 0) return;
+
+  const closedAt = new Date().toISOString();
+  openOrders.forEach(o => {
+    OrderDB.update(o.id, { paid:true, paymentMethod: tableDetailPayment, closedAt });
+  });
+  TableDB.update(tableId, { status:"free" });
+  closeModal("tableDetailModal");
+  renderTables();
+  showToast("Masa kapatıldı, ödeme alındı ✓");
+
+  // Masa hesabı fişi yazdır
+  printTableReceipt(tableId, openOrders, closedAt);
+}
+
+function printTableReceipt(tableId, openOrders, closedAt) {
+  const s       = SettingsDB.get();
+  const bizName = s.bizName || "AURA Coffee & Kitchen";
+  const taxRate = s.taxRate || 8;
+  const t       = TableDB.getById(tableId);
+  const tableLabel = t ? `Masa ${t.num} — ${t.zone}` : "Masa";
+
+  const now     = new Date(closedAt);
+  const dateStr = now.toLocaleDateString("tr-TR", { day:"2-digit", month:"2-digit", year:"numeric" });
+  const timeStr = now.toLocaleTimeString("tr-TR", { hour:"2-digit", minute:"2-digit" });
+
+  const payLabel = { cash:"Nakit", card:"Kredi Kartı", split:"Bölüşüm" }[tableDetailPayment] || "Nakit";
+
+  // Tüm siparişlerin ürünlerini birleştir (aynı ürünleri topla)
+  const itemMap = {};
+  openOrders.forEach(order => {
+    order.items.forEach(i => {
+      const key = i.id;
+      if (itemMap[key]) {
+        itemMap[key].qty   += i.qty;
+        itemMap[key].total += i.price * i.qty;
+      } else {
+        itemMap[key] = { ...i, total: i.price * i.qty };
+      }
+    });
+  });
+  const allItems = Object.values(itemMap);
+
+  const subtotal   = openOrders.reduce((s, o) => s + o.subtotal, 0);
+  const discount   = openOrders.reduce((s, o) => s + o.discount, 0);
+  const total      = openOrders.reduce((s, o) => s + o.total, 0);
+  const totalQty   = allItems.reduce((s, i) => s + i.qty, 0);
+  const taxAmt     = total * taxRate / (100 + taxRate);
+  const netAmt     = total - taxAmt;
+
+  // Birden fazla sipariş varsa hepsini listele
+  const orderNums  = openOrders.map(o => "#" + o.num).join(", ");
+  const allNotes   = openOrders.filter(o => o.note).map(o => `#${o.num}: ${o.note}`).join(" | ");
+  const staffNames = [...new Set(openOrders.map(o => o.userId ? (UserDB.getById(o.userId)?.name || "—") : "—"))].join(", ");
+
+  const itemRows = allItems.map(i => {
+    const name = `${i.emoji || ""} ${i.name}`.trim();
+    const nameShort = name.length > 22 ? name.slice(0,21) + "…" : name;
+    return `<tr>
+      <td style="padding:2px 0;vertical-align:top">${nameShort}</td>
+      <td style="text-align:center;vertical-align:top;white-space:nowrap">${i.qty}×</td>
+      <td style="text-align:right;vertical-align:top;white-space:nowrap">${formatMoney(i.price)}</td>
+      <td style="text-align:right;vertical-align:top;white-space:nowrap;font-weight:600">${formatMoney(i.total)}</td>
+    </tr>`;
+  }).join("");
+
+  const html = `<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <title>Masa Fişi — ${tableLabel}</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@400;600;700;800&display=swap');
+    *{margin:0;padding:0;box-sizing:border-box}
+    body{font-family:'DM Mono','Courier New',monospace;font-size:12px;background:#fff;color:#111;display:flex;justify-content:center;padding:20px 0}
+    .receipt{width:80mm;padding:0 4mm}
+    .header{text-align:center;padding-bottom:10px;margin-bottom:10px;border-bottom:1px dashed #aaa}
+    .logo-box{width:44px;height:44px;background:#111;border-radius:10px;display:flex;align-items:center;justify-content:center;margin:0 auto 8px;font-family:'DM Sans',sans-serif;font-weight:800;font-size:20px;color:#fff}
+    .biz-name{font-family:'DM Sans',sans-serif;font-size:16px;font-weight:700;margin-bottom:2px}
+    .biz-sub{font-size:10px;color:#666;text-transform:uppercase;letter-spacing:1.5px}
+    .table-badge{display:inline-block;background:#111;color:#fff;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:700;padding:5px 16px;border-radius:20px;margin:10px 0 4px}
+    .meta{font-size:11px;margin-bottom:10px}
+    .meta-row{display:flex;justify-content:space-between;padding:2px 0}
+    .meta-key{color:#666}
+    .meta-val{font-weight:500}
+    .order-nums{font-family:'DM Sans',sans-serif;font-size:11px;color:#888;text-align:center;margin-bottom:6px}
+    .divider{border:none;border-top:1px dashed #aaa;margin:8px 0}
+    .divider-solid{border:none;border-top:1px solid #111;margin:8px 0}
+    .items-table{width:100%;border-collapse:collapse;font-size:11.5px;margin-bottom:2px}
+    .items-table thead th{font-size:9px;text-transform:uppercase;letter-spacing:.8px;color:#888;padding:0 0 4px 0;font-weight:500}
+    .items-table thead th:nth-child(2),.items-table thead th:nth-child(3),.items-table thead th:nth-child(4){text-align:right}
+    .items-table thead th:nth-child(2){text-align:center}
+    .totals{margin-top:6px}
+    .total-row{display:flex;justify-content:space-between;font-size:11px;padding:2px 0;color:#444}
+    .total-row.discount{color:#1a8c4e}
+    .total-grand{display:flex;justify-content:space-between;font-family:'DM Sans',sans-serif;font-size:17px;font-weight:800;padding:6px 0 4px}
+    .payment-badge{display:inline-block;background:#111;color:#fff;font-family:'DM Sans',sans-serif;font-size:11px;font-weight:700;padding:4px 14px;border-radius:20px;letter-spacing:.3px;margin:4px 0}
+    .tax-block{font-size:10px;color:#999;border-top:1px dashed #ccc;margin-top:6px;padding-top:6px}
+    .tax-row{display:flex;justify-content:space-between;padding:1px 0}
+    .note-block{background:#f5f5f5;border-left:3px solid #111;padding:6px 8px;font-size:11px;color:#333;margin-top:6px;border-radius:0 4px 4px 0}
+    .note-label{font-size:9px;color:#999;text-transform:uppercase;letter-spacing:1px;margin-bottom:2px}
+    .footer{text-align:center;margin-top:12px;padding-top:10px;border-top:1px dashed #aaa;font-size:10px;color:#aaa;line-height:1.8}
+    .footer strong{color:#555;font-size:11px}
+    .barcode{font-family:monospace;font-size:28px;letter-spacing:-2px;color:#111;margin:6px 0 2px;line-height:1}
+    .barcode-num{font-size:9px;color:#aaa;letter-spacing:3px}
+    @media print{body{padding:0}@page{margin:4mm;size:80mm auto}}
+  </style>
+</head>
+<body>
+<div class="receipt">
+
+  <div class="header">
+    <div class="logo-box">${bizName[0]?.toUpperCase()||"A"}</div>
+    <div class="biz-name">${bizName}</div>
+    <div class="biz-sub">Masa Hesabı</div>
+  </div>
+
+  <div style="text-align:center">
+    <div class="table-badge">🪑 ${tableLabel}</div>
+    <div class="order-nums">Siparişler: ${orderNums}</div>
+  </div>
+
+  <div class="meta">
+    <div class="meta-row"><span class="meta-key">Tarih</span><span class="meta-val">${dateStr}</span></div>
+    <div class="meta-row"><span class="meta-key">Kapanış Saati</span><span class="meta-val">${timeStr}</span></div>
+    <div class="meta-row"><span class="meta-key">Personel</span><span class="meta-val">${staffNames}</span></div>
+    <div class="meta-row"><span class="meta-key">Toplam Sipariş</span><span class="meta-val">${openOrders.length} sipariş · ${totalQty} ürün</span></div>
+  </div>
+
+  <hr class="divider">
+
+  <table class="items-table">
+    <thead>
+      <tr>
+        <th style="text-align:left">Ürün</th>
+        <th>Adet</th>
+        <th style="text-align:right">Fiyat</th>
+        <th style="text-align:right">Tutar</th>
+      </tr>
+    </thead>
+    <tbody>${itemRows}</tbody>
+  </table>
+
+  <div class="totals">
+    <hr class="divider">
+    <div class="total-row"><span>Ara Toplam (${totalQty} ürün)</span><span>${formatMoney(subtotal)}</span></div>
+    ${discount > 0 ? `<div class="total-row discount"><span>İndirim</span><span>-${formatMoney(discount)}</span></div>` : ""}
+    <hr class="divider-solid">
+    <div class="total-grand"><span>TOPLAM</span><span>${formatMoney(total)}</span></div>
+    <div style="text-align:center;margin:4px 0 6px">
+      <span class="payment-badge">✓ ${payLabel}</span>
+    </div>
+    <div class="tax-block">
+      <div class="tax-row"><span>KDV Matrahı (%${taxRate})</span><span>${formatMoney(netAmt)}</span></div>
+      <div class="tax-row"><span>KDV Tutarı</span><span>${formatMoney(taxAmt)}</span></div>
+    </div>
+  </div>
+
+  ${allNotes ? `<div class="note-block"><div class="note-label">📝 Notlar</div>${allNotes}</div>` : ""}
+
+  <div class="footer">
+    <div class="barcode">|||||||||||||||||||||||</div>
+    <div class="barcode-num">MASA-${tableId}-${Date.now().toString().slice(-6)}</div>
+    <br>
+    <strong>${bizName}</strong><br>
+    ${dateStr} — ${timeStr}<br>
+    Teşekkür ederiz, iyi günler! ☕
+  </div>
+
+</div>
+<script>window.onload=function(){setTimeout(function(){window.print();},300)};<\/script>
+</body></html>`;
+
+  const w = window.open("", "_blank", "width=380,height=700,scrollbars=yes");
+  if (!w) { showToast("Pop-up engellendi! Tarayıcıda izin verin.", "red"); return; }
+  w.document.write(html);
+  w.document.close();
+}
+
+/* ══════════════════════════════════════════════════════
+   BARISTA VIEW (Kanban)
+══════════════════════════════════════════════════════ */
+function renderBarista() {
+  const statuses = ["pending","preparing","ready","delivered"];
+  const labels   = { pending:"Bekliyor", preparing:"Hazırlanıyor", ready:"Hazır", delivered:"Teslim Edildi" };
+  const icons    = { pending:"fa-clock", preparing:"fa-fire", ready:"fa-check-circle", delivered:"fa-circle-check" };
+
+  // Bugünün siparişleri
+  const orders = OrderDB.getToday();
+
+  statuses.forEach(status => {
+    const col     = document.getElementById("queue-" + status);
+    const countEl = document.getElementById("count-" + status);
+    if (!col) return;
+
+    const filtered = orders.filter(o => o.status === status);
+    if (countEl) countEl.textContent = filtered.length;
+
+    if (filtered.length === 0) {
+      col.innerHTML = `<div class="barista-empty">Sipariş yok</div>`;
+      return;
+    }
+
+    col.innerHTML = filtered.map(o => {
+      const time = new Date(o.createdAt).toLocaleTimeString("tr-TR", {hour:"2-digit",minute:"2-digit"});
+      const itemsHTML = o.items.map(i =>
+        `<div class="ticket-item"><span>${i.emoji} ${i.name}</span><span>×${i.qty}</span></div>`
+      ).join("");
+      const actions = baristaActions(o);
+      return `
+        <div class="barista-ticket">
+          <div class="ticket-top">
+            <span class="ticket-order">#${o.num}</span>
+            <span class="ticket-table">${o.tableLabel}</span>
+          </div>
+          <div class="ticket-time"><i class="fa-regular fa-clock"></i>${time}</div>
+          ${itemsHTML}
+          ${o.note ? `<div class="ticket-note">📝 ${o.note}</div>` : ""}
+          <div class="ticket-action">${actions}</div>
+        </div>
+      `;
+    }).join("");
+  });
+}
+
+function baristaActions(o) {
+  switch (o.status) {
+    case "pending":
+      return `<button class="ticket-btn primary" onclick="updateOrderStatus('${o.id}','preparing');renderBarista()">Hazırlamaya Başla</button>`;
+    case "preparing":
+      return `<button class="ticket-btn primary" onclick="updateOrderStatus('${o.id}','ready');renderBarista()">Hazır İşaretle</button>`;
+    case "ready":
+      return `<button class="ticket-btn primary" onclick="updateOrderStatus('${o.id}','delivered');renderBarista()">Teslim Edildi</button>`;
+    default:
+      return "";
+  }
+}
+
+function updateOrderStatus(orderId, status) {
+  OrderDB.update(orderId, { status });
+  // Not: Masa, sipariş teslim edildiğinde değil; ödeme alınıp "Öde ve Kapat" ile kapanır.
+}
+
+/* ══════════════════════════════════════════════════════
+   REPORTS VIEW
+══════════════════════════════════════════════════════ */
+let currentReportTab = "daily";
+
+function switchReportTab(tab) {
+  currentReportTab = tab;
+  document.getElementById("rtab-daily")?.classList.toggle("active", tab === "daily");
+  document.getElementById("rtab-monthly")?.classList.toggle("active", tab === "monthly");
+  document.getElementById("report-daily").style.display   = tab === "daily"   ? "flex" : "none";
+  document.getElementById("report-monthly").style.display = tab === "monthly" ? "flex" : "none";
+  if (tab === "daily")   renderDailyReport();
+  if (tab === "monthly") renderMonthlyReport();
+}
+
+function renderReports() {
+  switchReportTab(currentReportTab);
+}
+
+/* ── GÜNLÜK RAPOR ────────────────────────────────── */
+function renderDailyReport() {
+  const allToday  = OrderDB.getToday().filter(o => o.status !== "cancelled");
+  const paidToday = allToday.filter(o => o.paid);
+
+  const total     = paidToday.reduce((s, o) => s + (o.total || 0), 0);
+  const count     = paidToday.length;
+  const avg       = count ? total / count : 0;
+  const items     = paidToday.reduce((s, o) => s + o.items.reduce((ss, i) => ss + i.qty, 0), 0);
+  const openCount = allToday.length - paidToday.length;
+  const cashTotal = paidToday.filter(o=>o.paymentMethod==="cash").reduce((s,o)=>s+o.total,0);
+  const cardTotal = paidToday.filter(o=>o.paymentMethod==="card").reduce((s,o)=>s+o.total,0);
+
+  const statCards = document.getElementById("reportStats");
+  if (statCards) {
+    statCards.innerHTML = `
+      <div class="stat-card" style="--card-accent:var(--accent)">
+        <div class="stat-card-top">
+          <div class="stat-icon" style="background:var(--accent-bg);color:var(--accent)"><i class="fa-solid fa-turkish-lira-sign"></i></div>
+          <div class="stat-trend">Bugün</div>
+        </div>
+        <div class="stat-info">
+          <div class="stat-label">Günlük Ciro</div>
+          <div class="stat-val">${formatMoney(total)}</div>
+        </div>
+      </div>
+      <div class="stat-card" style="--card-accent:var(--blue)">
+        <div class="stat-card-top">
+          <div class="stat-icon" style="background:var(--blue-bg);color:var(--blue)"><i class="fa-solid fa-receipt"></i></div>
+          <div class="stat-trend">İşlem</div>
+        </div>
+        <div class="stat-info">
+          <div class="stat-label">Ödenen Sipariş</div>
+          <div class="stat-val">${count}</div>
+        </div>
+      </div>
+      <div class="stat-card" style="--card-accent:var(--green)">
+        <div class="stat-card-top">
+          <div class="stat-icon" style="background:var(--green-bg);color:var(--green)"><i class="fa-solid fa-chart-bar"></i></div>
+          <div class="stat-trend">Ortalama</div>
+        </div>
+        <div class="stat-info">
+          <div class="stat-label">Ort. Sepet</div>
+          <div class="stat-val">${formatMoney(avg)}</div>
+        </div>
+      </div>
+      <div class="stat-card" style="--card-accent:var(--orange)">
+        <div class="stat-card-top">
+          <div class="stat-icon" style="background:var(--orange-bg);color:var(--orange)"><i class="fa-solid fa-clock"></i></div>
+          <div class="stat-trend">Açık</div>
+        </div>
+        <div class="stat-info">
+          <div class="stat-label">Açık Hesap</div>
+          <div class="stat-val">${openCount}</div>
+        </div>
+      </div>
+      <div class="stat-card" style="--card-accent:var(--green)">
+        <div class="stat-card-top">
+          <div class="stat-icon" style="background:var(--green-bg);color:var(--green)"><i class="fa-solid fa-money-bill-wave"></i></div>
+          <div class="stat-trend">Nakit</div>
+        </div>
+        <div class="stat-info">
+          <div class="stat-label">Nakit Tahsilat</div>
+          <div class="stat-val">${formatMoney(cashTotal)}</div>
+        </div>
+      </div>
+      <div class="stat-card" style="--card-accent:var(--purple)">
+        <div class="stat-card-top">
+          <div class="stat-icon" style="background:var(--purple-bg);color:var(--purple)"><i class="fa-solid fa-credit-card"></i></div>
+          <div class="stat-trend">Kart</div>
+        </div>
+        <div class="stat-info">
+          <div class="stat-label">Kart Tahsilat</div>
+          <div class="stat-val">${formatMoney(cardTotal)}</div>
+        </div>
+      </div>
+    `;
+  }
+  renderBarChart(paidToday);
+  renderDonut(paidToday);
+  renderOrderHistory(allToday);
+}
+
+/* ── AYLIK RAPOR ─────────────────────────────────── */
+function getMonthOrders() {
+  const now   = new Date();
+  const start = new Date(now.getFullYear(), now.getMonth(), 1);
+  return OrderDB.getAll().filter(o => new Date(o.createdAt) >= start && o.status !== "cancelled");
+}
+
+function renderMonthlyReport() {
+  const now        = new Date();
+  const monthName  = now.toLocaleDateString("tr-TR", { month:"long", year:"numeric" });
+  const allMonth   = getMonthOrders();
+  const paidMonth  = allMonth.filter(o => o.paid);
+
+  const total     = paidMonth.reduce((s, o) => s + (o.total || 0), 0);
+  const count     = paidMonth.length;
+  const avg       = count ? total / count : 0;
+  const openCount = allMonth.length - paidMonth.length;
+  const cashTotal = paidMonth.filter(o=>o.paymentMethod==="cash").reduce((s,o)=>s+o.total,0);
+  const cardTotal = paidMonth.filter(o=>o.paymentMethod==="card").reduce((s,o)=>s+o.total,0);
+  const daysInMonth = new Date(now.getFullYear(), now.getMonth()+1, 0).getDate();
+  const activeDays  = new Set(paidMonth.map(o => new Date(o.createdAt).getDate())).size;
+
+  const sub = document.getElementById("monthlyChartSub");
+  if (sub) sub.textContent = monthName;
+
+  const statCards = document.getElementById("monthlyStats");
+  if (statCards) {
+    statCards.innerHTML = `
+      <div class="stat-card" style="--card-accent:var(--accent)">
+        <div class="stat-card-top">
+          <div class="stat-icon" style="background:var(--accent-bg);color:var(--accent)"><i class="fa-solid fa-turkish-lira-sign"></i></div>
+          <div class="stat-trend">Bu Ay</div>
+        </div>
+        <div class="stat-info">
+          <div class="stat-label">Aylık Ciro</div>
+          <div class="stat-val">${formatMoney(total)}</div>
+        </div>
+      </div>
+      <div class="stat-card" style="--card-accent:var(--blue)">
+        <div class="stat-card-top">
+          <div class="stat-icon" style="background:var(--blue-bg);color:var(--blue)"><i class="fa-solid fa-receipt"></i></div>
+          <div class="stat-trend">İşlem</div>
+        </div>
+        <div class="stat-info">
+          <div class="stat-label">Toplam Sipariş</div>
+          <div class="stat-val">${count}</div>
+        </div>
+      </div>
+      <div class="stat-card" style="--card-accent:var(--green)">
+        <div class="stat-card-top">
+          <div class="stat-icon" style="background:var(--green-bg);color:var(--green)"><i class="fa-solid fa-chart-bar"></i></div>
+          <div class="stat-trend">Ortalama</div>
+        </div>
+        <div class="stat-info">
+          <div class="stat-label">Ort. Sepet</div>
+          <div class="stat-val">${formatMoney(avg)}</div>
+        </div>
+      </div>
+      <div class="stat-card" style="--card-accent:var(--orange)">
+        <div class="stat-card-top">
+          <div class="stat-icon" style="background:var(--orange-bg);color:var(--orange)"><i class="fa-solid fa-calendar-check"></i></div>
+          <div class="stat-trend">${daysInMonth} gün</div>
+        </div>
+        <div class="stat-info">
+          <div class="stat-label">Aktif Gün</div>
+          <div class="stat-val">${activeDays} <span style="font-size:14px;color:var(--text3)">/ ${daysInMonth}</span></div>
+        </div>
+      </div>
+      <div class="stat-card" style="--card-accent:var(--green)">
+        <div class="stat-card-top">
+          <div class="stat-icon" style="background:var(--green-bg);color:var(--green)"><i class="fa-solid fa-money-bill-wave"></i></div>
+          <div class="stat-trend">Nakit</div>
+        </div>
+        <div class="stat-info">
+          <div class="stat-label">Nakit Tahsilat</div>
+          <div class="stat-val">${formatMoney(cashTotal)}</div>
+        </div>
+      </div>
+      <div class="stat-card" style="--card-accent:var(--purple)">
+        <div class="stat-card-top">
+          <div class="stat-icon" style="background:var(--purple-bg);color:var(--purple)"><i class="fa-solid fa-credit-card"></i></div>
+          <div class="stat-trend">Kart</div>
+        </div>
+        <div class="stat-info">
+          <div class="stat-label">Kart Tahsilat</div>
+          <div class="stat-val">${formatMoney(cardTotal)}</div>
+        </div>
+      </div>
+    `;
+  }
+
+  // Günlük bar chart (ay içindeki her gün)
+  renderMonthlyBarChart(paidMonth, now);
+  renderDonutInto(paidMonth, "monthlyDonutWrap");
+  renderTopProducts(paidMonth);
+}
+
+function renderMonthlyBarChart(orders, now) {
+  const container = document.getElementById("monthlyBarChart");
+  if (!container) return;
+  const daysInMonth = new Date(now.getFullYear(), now.getMonth()+1, 0).getDate();
+  const data = Array.from({length: daysInMonth}, (_, i) => {
+    const day = i + 1;
+    return orders.filter(o => new Date(o.createdAt).getDate() === day)
+      .reduce((s, o) => s + o.total, 0);
+  });
+  const max = Math.max(...data, 1);
+  container.innerHTML = data.map((val, i) => {
+    const day   = i + 1;
+    const pct   = (val / max * 100).toFixed(1);
+    const isPeak = val === Math.max(...data) && val > 0;
+    // Show every 5th day label to avoid crowding
+    const showLabel = day === 1 || day % 5 === 0 || day === daysInMonth;
+    return `
+      <div class="bar-col">
+        <div class="bar-val">${val > 0 ? Math.round(val).toLocaleString("tr-TR") : ""}</div>
+        <div class="bar-fill ${isPeak ? "peak" : ""}" style="height:${pct}%"></div>
+        <div class="bar-label">${showLabel ? day : ""}</div>
+      </div>
+    `;
+  }).join("");
+}
+
+function renderDonutInto(orders, containerId) {
+  const container = document.getElementById(containerId);
+  if (!container) return;
+  const catRevenue = {};
+  orders.forEach(o => {
+    o.items.forEach(item => {
+      const product = MenuDB.getById(item.id);
+      const cat = product?.cat || "Diğer";
+      catRevenue[cat] = (catRevenue[cat] || 0) + item.price * item.qty;
+    });
+  });
+  const total  = Object.values(catRevenue).reduce((s, v) => s + v, 0) || 1;
+  const sorted = Object.entries(catRevenue).sort((a, b) => b[1] - a[1]).slice(0, 5);
+  const colors = ["#C8A96E","#4CAF7A","#9B8FE0","#E89843","#5B9CF6"];
+  if (sorted.length === 0) {
+    container.innerHTML = `<div style="color:var(--text3);font-size:13px;text-align:center;padding:20px;">Henüz veri yok</div>`;
+    return;
+  }
+  let offset = 0;
+  const circumference = 2 * Math.PI * 40;
+  const segments = sorted.map(([cat, rev], i) => {
+    const pct  = rev / total;
+    const dash = pct * circumference;
+    const gap  = circumference - dash;
+    const seg  = `<circle cx="50" cy="50" r="40" fill="none" stroke="${colors[i]}" stroke-width="14"
+      stroke-dasharray="${dash.toFixed(2)} ${gap.toFixed(2)}"
+      stroke-dashoffset="${(-offset * circumference).toFixed(2)}"
+      transform="rotate(-90 50 50)" opacity="0.85"/>`;
+    offset += pct;
+    return seg;
+  });
+  const svg = `<svg viewBox="0 0 100 100" style="width:120px;height:120px;flex-shrink:0">
+    <circle cx="50" cy="50" r="40" fill="none" stroke="var(--bg4)" stroke-width="14"/>
+    ${segments.join("")}
+  </svg>`;
+  const legend = `<div class="donut-legend">
+    ${sorted.map(([cat, rev], i) => `
+      <div class="legend-item">
+        <span class="legend-color" style="background:${colors[i]}"></span>
+        <span class="legend-name">${cat}</span>
+        <span class="legend-pct">${(rev/total*100).toFixed(0)}%</span>
+      </div>
+    `).join("")}
+  </div>`;
+  container.innerHTML = svg + legend;
+}
+
+function renderTopProducts(orders) {
+  const container = document.getElementById("monthlyTopProducts");
+  if (!container) return;
+  const productMap = {};
+  orders.forEach(o => {
+    o.items.forEach(item => {
+      if (!productMap[item.id]) productMap[item.id] = { name: item.name, emoji: item.emoji, qty: 0, revenue: 0 };
+      productMap[item.id].qty     += item.qty;
+      productMap[item.id].revenue += item.price * item.qty;
+    });
+  });
+  const sorted = Object.values(productMap).sort((a, b) => b.qty - a.qty).slice(0, 10);
+  if (sorted.length === 0) {
+    container.innerHTML = `<div style="text-align:center;color:var(--text3);font-size:13px;padding:24px;">Bu ay sipariş yok</div>`;
+    return;
+  }
+  container.innerHTML = sorted.map((p, i) => `
+    <div class="history-item">
+      <span class="history-num" style="min-width:28px;text-align:center;font-size:14px;">${i+1}.</span>
+      <div class="history-info">
+        <div class="history-table">${p.emoji} ${p.name}</div>
+      </div>
+      <div class="history-right">
+        <div class="history-total">${formatMoney(p.revenue)}</div>
+        <div class="history-method">${p.qty} adet</div>
+      </div>
+    </div>
+  `).join("");
+}
+
+/* ── PDF EXPORT ──────────────────────────────────── */
+function exportReportPDF() {
+  const isMonthly = currentReportTab === "monthly";
+  const now = new Date();
+  const dateStr  = now.toLocaleDateString("tr-TR", { day:"2-digit", month:"long", year:"numeric" });
+  const monthStr = now.toLocaleDateString("tr-TR", { month:"long", year:"numeric" });
+
+  let reportData, title, subtitle;
+
+  if (!isMonthly) {
+    // GÜNLÜK
+    const allToday  = OrderDB.getToday().filter(o => o.status !== "cancelled");
+    const paid      = allToday.filter(o => o.paid);
+    const total     = paid.reduce((s, o) => s + o.total, 0);
+    const count     = paid.length;
+    const avg       = count ? total / count : 0;
+    const cash      = paid.filter(o=>o.paymentMethod==="cash").reduce((s,o)=>s+o.total,0);
+    const card      = paid.filter(o=>o.paymentMethod==="card").reduce((s,o)=>s+o.total,0);
+    const openCount = allToday.length - paid.length;
+    title    = "AURA Coffee &amp; Kitchen — Günlük Rapor";
+    subtitle = dateStr;
+
+    // En çok satanlar
+    const pm = {};
+    paid.forEach(o => o.items.forEach(i => {
+      if (!pm[i.name]) pm[i.name] = { emoji:i.emoji, qty:0, rev:0 };
+      pm[i.name].qty += i.qty; pm[i.name].rev += i.price*i.qty;
+    }));
+    const top = Object.entries(pm).sort((a,b)=>b[1].qty-a[1].qty).slice(0,10);
+
+    // Saatlik ciro
+    const hours = Array.from({length:12},(_,i)=>i+8);
+    const hourData = hours.map(h => ({
+      h, rev: paid.filter(o=>new Date(o.createdAt).getHours()===h).reduce((s,o)=>s+o.total,0)
+    }));
+
+    reportData = buildDailyPDFHtml({ title, subtitle, total, count, avg, cash, card, openCount, paid, top, hourData, dateStr, allToday });
+  } else {
+    // AYLIK
+    const allMonth  = getMonthOrders();
+    const paid      = allMonth.filter(o => o.paid);
+    const total     = paid.reduce((s, o) => s + o.total, 0);
+    const count     = paid.length;
+    const avg       = count ? total / count : 0;
+    const cash      = paid.filter(o=>o.paymentMethod==="cash").reduce((s,o)=>s+o.total,0);
+    const card      = paid.filter(o=>o.paymentMethod==="card").reduce((s,o)=>s+o.total,0);
+    const openCount = allMonth.length - paid.length;
+    const daysInMonth = new Date(now.getFullYear(), now.getMonth()+1, 0).getDate();
+    const activeDays  = new Set(paid.map(o => new Date(o.createdAt).getDate())).size;
+
+    const pm = {};
+    paid.forEach(o => o.items.forEach(i => {
+      if (!pm[i.name]) pm[i.name] = { emoji:i.emoji, qty:0, rev:0 };
+      pm[i.name].qty += i.qty; pm[i.name].rev += i.price*i.qty;
+    }));
+    const top = Object.entries(pm).sort((a,b)=>b[1].qty-a[1].qty).slice(0,10);
+
+    // Günlük ciro dizisi
+    const dayData = Array.from({length: daysInMonth}, (_,i) => {
+      const day = i+1;
+      return { day, rev: paid.filter(o=>new Date(o.createdAt).getDate()===day).reduce((s,o)=>s+o.total,0) };
+    });
+
+    reportData = buildMonthlyPDFHtml({ total, count, avg, cash, card, openCount, activeDays, daysInMonth, top, dayData, monthStr });
+  }
+
+  const w = window.open("","_blank");
+  if (!w) { showToast("Pop-up engellendi, lütfen izin verin.", "red"); return; }
+  w.document.write(reportData);
+  w.document.close();
+  setTimeout(() => { w.focus(); w.print(); }, 600);
+}
+
+function pdfStyles() {
+  return `
+    <style>
+      @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=Syne:wght@700;800&display=swap');
+      *{margin:0;padding:0;box-sizing:border-box;}
+      body{font-family:'DM Sans',sans-serif;font-size:13px;color:#1a1a1a;background:#fff;padding:32px 40px;}
+      .pdf-header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:28px;padding-bottom:18px;border-bottom:2px solid #1a1a1a;}
+      .pdf-logo{font-family:'Syne',sans-serif;font-size:22px;font-weight:800;letter-spacing:-1px;}
+      .pdf-logo span{color:#8B6B3D;}
+      .pdf-meta{text-align:right;font-size:11px;color:#666;line-height:1.7;}
+      .pdf-title{font-family:'Syne',sans-serif;font-size:17px;font-weight:800;margin-bottom:2px;}
+      .section-title{font-family:'Syne',sans-serif;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#8B6B3D;margin:22px 0 10px;}
+      .stat-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:8px;}
+      .stat-box{border:1.5px solid #e5e5e5;border-radius:8px;padding:12px 14px;}
+      .stat-box .label{font-size:10px;color:#888;text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px;}
+      .stat-box .value{font-family:'Syne',sans-serif;font-size:18px;font-weight:800;color:#1a1a1a;}
+      .stat-box.accent{border-color:#C8A96E;background:#fffaf3;}
+      .stat-box.accent .value{color:#8B6B3D;}
+      table{width:100%;border-collapse:collapse;margin-top:2px;}
+      thead tr{border-bottom:2px solid #1a1a1a;}
+      thead th{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:#888;padding:6px 10px;text-align:left;}
+      tbody tr{border-bottom:1px solid #f0f0f0;}
+      tbody tr:last-child{border-bottom:none;}
+      tbody td{padding:8px 10px;font-size:12px;color:#333;}
+      tbody tr:nth-child(even){background:#fafafa;}
+      .badge-cash{display:inline-block;padding:2px 8px;border-radius:100px;background:#e8f5ee;color:#2e7d52;font-size:10px;font-weight:600;}
+      .badge-card{display:inline-block;padding:2px 8px;border-radius:100px;background:#ede9fb;color:#5b21b6;font-size:10px;font-weight:600;}
+      .badge-open{display:inline-block;padding:2px 8px;border-radius:100px;background:#fff3e0;color:#e65100;font-size:10px;font-weight:600;}
+      .hour-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:8px;margin-top:2px;}
+      .hour-box{border:1px solid #eee;border-radius:6px;padding:8px 6px;text-align:center;}
+      .hour-box .h{font-size:10px;color:#aaa;margin-bottom:4px;}
+      .hour-box .v{font-size:12px;font-weight:700;color:#1a1a1a;}
+      .hour-box.peak{border-color:#C8A96E;background:#fffaf3;}
+      .hour-box.peak .v{color:#8B6B3D;}
+      .pay-row{display:flex;gap:16px;margin-top:2px;}
+      .pay-box{flex:1;border:1.5px solid #e5e5e5;border-radius:8px;padding:12px 14px;}
+      .pay-box .label{font-size:10px;color:#888;text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px;}
+      .pay-box .value{font-family:'Syne',sans-serif;font-size:16px;font-weight:800;}
+      .day-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;margin-top:2px;}
+      .day-box{border:1px solid #eee;border-radius:6px;padding:6px 4px;text-align:center;}
+      .day-box .d{font-size:9px;color:#bbb;margin-bottom:3px;}
+      .day-box .v{font-size:10px;font-weight:700;color:#1a1a1a;}
+      .day-box.has-data{border-color:#C8A96E;background:#fffaf3;}
+      .day-box.has-data .v{color:#8B6B3D;}
+      .pdf-footer{margin-top:28px;padding-top:12px;border-top:1px solid #e5e5e5;font-size:10px;color:#aaa;display:flex;justify-content:space-between;}
+      @media print{
+        body{padding:20px 28px;}
+        @page{margin:1.5cm;size:A4;}
+      }
+    </style>
+  `;
+}
+
+function buildDailyPDFHtml({ title, subtitle, total, count, avg, cash, card, openCount, paid, top, hourData, dateStr, allToday }) {
+  const now = new Date();
+  const printTime = now.toLocaleTimeString("tr-TR",{hour:"2-digit",minute:"2-digit"});
+  const maxHour = Math.max(...hourData.map(h=>h.rev), 1);
+
+  const hourBoxes = hourData.map(({h,rev}) => `
+    <div class="hour-box ${rev===maxHour&&rev>0?'peak':''}">
+      <div class="h">${h}:00</div>
+      <div class="v">${rev>0?Math.round(rev).toLocaleString("tr-TR"):"—"}</div>
+    </div>`).join("");
+
+  const topRows = top.map(([name,{emoji,qty,rev}],i) => `
+    <tr>
+      <td>${i+1}</td>
+      <td>${emoji} ${name}</td>
+      <td style="text-align:center">${qty}</td>
+      <td style="text-align:right;font-weight:600">${formatMoney(rev)}</td>
+    </tr>`).join("");
+
+  const orderRows = [...allToday].reverse().slice(0,20).map(o => `
+    <tr>
+      <td>#${o.num}</td>
+      <td>${o.tableLabel}</td>
+      <td>${o.items.map(i=>`${i.emoji}${i.name}×${i.qty}`).join(", ")}</td>
+      <td style="text-align:right;font-weight:600">${formatMoney(o.total)}</td>
+      <td style="text-align:center">${!o.paid?'<span class="badge-open">Açık</span>':o.paymentMethod==="cash"?'<span class="badge-cash">Nakit</span>':'<span class="badge-card">Kart</span>'}</td>
+    </tr>`).join("");
+
+  return `<!DOCTYPE html><html lang="tr"><head><meta charset="UTF-8"><title>AURA — Günlük Rapor ${dateStr}</title>${pdfStyles()}</head><body>
+  <div class="pdf-header">
+    <div>
+      <div class="pdf-logo">AURA <span>Coffee &amp; Kitchen</span></div>
+      <div style="font-size:12px;color:#888;margin-top:4px;">POS Sistemi</div>
+    </div>
+    <div class="pdf-meta">
+      <div class="pdf-title">Günlük Satış Raporu</div>
+      <div>${dateStr}</div>
+      <div>Yazdırma: ${printTime}</div>
+      ${currentUser ? `<div>Hazırlayan: ${currentUser.name}</div>` : ""}
+    </div>
+  </div>
+
+  <div class="section-title">Özet</div>
+  <div class="stat-grid">
+    <div class="stat-box accent"><div class="label">Günlük Ciro</div><div class="value">${formatMoney(total)}</div></div>
+    <div class="stat-box"><div class="label">Ödenen Sipariş</div><div class="value">${count}</div></div>
+    <div class="stat-box"><div class="label">Ortalama Sepet</div><div class="value">${formatMoney(avg)}</div></div>
+  </div>
+
+  <div class="section-title">Ödeme Yöntemi</div>
+  <div class="pay-row">
+    <div class="pay-box"><div class="label">Nakit</div><div class="value" style="color:#2e7d52">${formatMoney(cash)}</div></div>
+    <div class="pay-box"><div class="label">Kart</div><div class="value" style="color:#5b21b6">${formatMoney(card)}</div></div>
+    <div class="pay-box"><div class="label">Açık Hesap</div><div class="value" style="color:#e65100">${openCount} masa</div></div>
+  </div>
+
+  <div class="section-title">Saatlik Ciro (₺)</div>
+  <div class="hour-grid">${hourBoxes}</div>
+
+  ${top.length > 0 ? `
+  <div class="section-title">En Çok Satan Ürünler</div>
+  <table>
+    <thead><tr><th>#</th><th>Ürün</th><th style="text-align:center">Adet</th><th style="text-align:right">Ciro</th></tr></thead>
+    <tbody>${topRows}</tbody>
+  </table>` : ""}
+
+  <div class="section-title">Sipariş Detayları</div>
+  <table>
+    <thead><tr><th>No</th><th>Masa</th><th>Ürünler</th><th style="text-align:right">Tutar</th><th style="text-align:center">Durum</th></tr></thead>
+    <tbody>${orderRows}</tbody>
+  </table>
+
+  <div class="pdf-footer">
+    <span>AURA Coffee &amp; Kitchen — POS Raporu</span>
+    <span>${dateStr} • ${printTime}</span>
+  </div>
+</body></html>`;
+}
+
+function buildMonthlyPDFHtml({ total, count, avg, cash, card, openCount, activeDays, daysInMonth, top, dayData, monthStr }) {
+  const now = new Date();
+  const printTime = now.toLocaleTimeString("tr-TR",{hour:"2-digit",minute:"2-digit"});
+  const dateStr   = now.toLocaleDateString("tr-TR",{day:"2-digit",month:"long",year:"numeric"});
+  const maxDay    = Math.max(...dayData.map(d=>d.rev), 1);
+
+  const dayBoxes = dayData.map(({day,rev}) => `
+    <div class="day-box ${rev>0?'has-data':''}">
+      <div class="d">${day}</div>
+      <div class="v">${rev>0?Math.round(rev/1000).toLocaleString("tr-TR")+"K":"—"}</div>
+    </div>`).join("");
+
+  const topRows = top.map(([name,{emoji,qty,rev}],i) => `
+    <tr>
+      <td>${i+1}</td>
+      <td>${emoji} ${name}</td>
+      <td style="text-align:center">${qty}</td>
+      <td style="text-align:right;font-weight:600">${formatMoney(rev)}</td>
+    </tr>`).join("");
+
+  return `<!DOCTYPE html><html lang="tr"><head><meta charset="UTF-8"><title>AURA — Aylık Rapor ${monthStr}</title>${pdfStyles()}</head><body>
+  <div class="pdf-header">
+    <div>
+      <div class="pdf-logo">AURA <span>Coffee &amp; Kitchen</span></div>
+      <div style="font-size:12px;color:#888;margin-top:4px;">POS Sistemi</div>
+    </div>
+    <div class="pdf-meta">
+      <div class="pdf-title">Aylık Satış Raporu</div>
+      <div>${monthStr}</div>
+      <div>Yazdırma: ${dateStr} ${printTime}</div>
+      ${currentUser ? `<div>Hazırlayan: ${currentUser.name}</div>` : ""}
+    </div>
+  </div>
+
+  <div class="section-title">Aylık Özet</div>
+  <div class="stat-grid">
+    <div class="stat-box accent"><div class="label">Aylık Ciro</div><div class="value">${formatMoney(total)}</div></div>
+    <div class="stat-box"><div class="label">Toplam Sipariş</div><div class="value">${count}</div></div>
+    <div class="stat-box"><div class="label">Ortalama Sepet</div><div class="value">${formatMoney(avg)}</div></div>
+    <div class="stat-box"><div class="label">Aktif Gün</div><div class="value">${activeDays} / ${daysInMonth}</div></div>
+    <div class="stat-box"><div class="label">Günlük Ort. Ciro</div><div class="value">${formatMoney(activeDays?total/activeDays:0)}</div></div>
+    <div class="stat-box"><div class="label">Açık Hesap</div><div class="value">${openCount}</div></div>
+  </div>
+
+  <div class="section-title">Ödeme Yöntemi</div>
+  <div class="pay-row">
+    <div class="pay-box"><div class="label">Nakit</div><div class="value" style="color:#2e7d52">${formatMoney(cash)}</div></div>
+    <div class="pay-box"><div class="label">Kart</div><div class="value" style="color:#5b21b6">${formatMoney(card)}</div></div>
+  </div>
+
+  <div class="section-title">Günlük Ciro Dağılımı (${monthStr})</div>
+  <div class="day-grid">${dayBoxes}</div>
+  <div style="font-size:10px;color:#aaa;margin-top:6px;">Değerler bin ₺ (K) cinsinden gösterilmiştir</div>
+
+  ${top.length > 0 ? `
+  <div class="section-title">En Çok Satan Ürünler (Bu Ay)</div>
+  <table>
+    <thead><tr><th>#</th><th>Ürün</th><th style="text-align:center">Adet</th><th style="text-align:right">Ciro</th></tr></thead>
+    <tbody>${topRows}</tbody>
+  </table>` : ""}
+
+  <div class="pdf-footer">
+    <span>AURA Coffee &amp; Kitchen — POS Raporu</span>
+    <span>${monthStr} • ${printTime}</span>
+  </div>
+</body></html>`;
+}
+
+
+function renderBarChart(orders) {
+  const container = document.getElementById("barChart");
+  if (!container) return;
+  const hours = Array.from({length:12}, (_,i) => i + 8); // 08-19
+  const data = hours.map(h => {
+    return orders.filter(o => new Date(o.createdAt).getHours() === h)
+      .reduce((s, o) => s + o.total, 0);
+  });
+  const max = Math.max(...data, 1);
+  container.innerHTML = hours.map((h, i) => {
+    const pct = (data[i] / max * 100).toFixed(1);
+    const isPeak = data[i] === Math.max(...data) && data[i] > 0;
+    return `
+      <div class="bar-col">
+        <div class="bar-val">${data[i] > 0 ? data[i].toLocaleString("tr-TR",{maximumFractionDigits:0}) : ""}</div>
+        <div class="bar-fill ${isPeak ? "peak" : ""}" style="height:${pct}%"></div>
+        <div class="bar-label">${h}:00</div>
+      </div>
+    `;
+  }).join("");
+}
+
+function renderDonut(orders) {
+  renderDonutInto(orders, "donutWrap");
+}
+
+function renderOrderHistory(orders) {
+  const container = document.getElementById("orderHistory");
+  if (!container) return;
+  const recent = [...orders].reverse().slice(0, 8);
+  if (recent.length === 0) {
+    container.innerHTML = `<div style="text-align:center;color:var(--text3);font-size:13px;padding:24px;">Bugün sipariş yok</div>`;
+    return;
+  }
+  container.innerHTML = recent.map(o => `
+    <div class="history-item">
+      <span class="history-num">#${o.num}</span>
+      <div class="history-info">
+        <div class="history-table">${o.tableLabel}</div>
+        <div class="history-items">${o.items.map(i => `${i.emoji}×${i.qty}`).join(" ")}</div>
+      </div>
+      <div class="history-right">
+        <div class="history-total">${formatMoney(o.total)}</div>
+        <div class="history-method" style="${!o.paid ? "color:var(--orange)" : ""}">${paymentMethodLabel(o)}</div>
+      </div>
+    </div>
+  `).join("");
+}
+
+/* ══════════════════════════════════════════════════════
+   MENU MANAGE VIEW
+══════════════════════════════════════════════════════ */
+function renderMenuManage() {
+  const cats   = MenuDB.getCategories();
+  const catList = document.getElementById("mmCatList");
+  if (catList) {
+    catList.innerHTML = cats.map(c => `
+      <button class="mm-cat-btn ${currentMenuCat === c ? "active" : ""}" onclick="setMenuCat('${c}')">
+        ${c}
+        <span class="mm-cat-count">${MenuDB.getByCategory(c).length}</span>
+      </button>
+    `).join("");
+  }
+
+  const items = currentMenuCat ? MenuDB.getByCategory(currentMenuCat) : MenuDB.getAll();
+  const list  = document.getElementById("mmProductList");
+  if (!list) return;
+  list.innerHTML = items.map(p => `
+    <div class="mm-product-row">
+      <span class="mm-emoji">${p.emoji}</span>
+      <div class="mm-info">
+        <div class="mm-name">${p.name} ${p.popular ? "⭐" : ""}</div>
+        <div class="mm-desc">${p.desc} — <em>${p.cat}</em></div>
+      </div>
+      <span class="mm-price">${formatMoney(p.price)}</span>
+      <div class="mm-actions">
+        <label class="toggle-switch" title="${p.available !== false ? "Aktif" : "Pasif"}">
+          <input type="checkbox" ${p.available !== false ? "checked" : ""} onchange="toggleProductAvail(${p.id},this.checked)">
+          <span class="toggle-slider"></span>
+        </label>
+        <button class="mm-edit-btn" onclick="openEditProduct(${p.id})" title="Düzenle"><i class="fa-solid fa-pen"></i></button>
+        <button class="mm-edit-btn mm-del-btn" onclick="deleteProduct(${p.id})" title="Sil"><i class="fa-solid fa-trash"></i></button>
+      </div>
+    </div>
+  `).join("");
+}
+
+function setMenuCat(cat) {
+  currentMenuCat = cat;
+  renderMenuManage();
+}
+
+function toggleProductAvail(id, val) {
+  MenuDB.update(id, { available: val });
+  showToast(val ? "Ürün aktif edildi ✓" : "Ürün pasife alındı");
+}
+
+function deleteProduct(id) {
+  const p = MenuDB.getById(id);
+  if (!p) return;
+  if (!confirm(`"${p.name}" silinsin mi?`)) return;
+  MenuDB.delete(id);
+  renderMenuManage();
+  showToast("Ürün silindi");
+}
+
+function openAddProduct() {
+  editingProductId = null;
+  document.getElementById("productModalTitle").textContent = "Yeni Ürün Ekle";
+  document.getElementById("editEmoji").value   = "";
+  document.getElementById("editName").value    = "";
+  document.getElementById("editDesc").value    = "";
+  document.getElementById("editPrice").value   = "";
+  document.getElementById("editPopular").checked = false;
+  populateEditCatSelect();
+  openModal("addProductModal");
+}
+
+function openEditProduct(id) {
+  const p = MenuDB.getById(id);
+  if (!p) return;
+  editingProductId = id;
+  document.getElementById("productModalTitle").textContent = "Ürünü Düzenle";
+  document.getElementById("editEmoji").value    = p.emoji;
+  document.getElementById("editName").value     = p.name;
+  document.getElementById("editDesc").value     = p.desc;
+  document.getElementById("editPrice").value    = p.price;
+  document.getElementById("editPopular").checked = p.popular;
+  populateEditCatSelect(p.cat);
+  openModal("addProductModal");
+}
+
+function populateEditCatSelect(selectedCat = "") {
+  const sel = document.getElementById("editCat");
+  if (!sel) return;
+  const cats = MenuDB.getCategories();
+  sel.innerHTML = cats.map(c =>
+    `<option value="${c}" ${c === selectedCat ? "selected" : ""}>${c}</option>`
+  ).join("") + `<option value="__new__">+ Yeni Kategori...</option>`;
+}
+
+function saveProduct() {
+  const emoji   = document.getElementById("editEmoji").value.trim() || "☕";
+  const name    = document.getElementById("editName").value.trim();
+  const desc    = document.getElementById("editDesc").value.trim();
+  const price   = parseFloat(document.getElementById("editPrice").value);
+  const popular = document.getElementById("editPopular").checked;
+  let   cat     = document.getElementById("editCat").value;
+
+  if (!name || isNaN(price)) { showToast("Ad ve fiyat zorunludur!", "red"); return; }
+
+  if (cat === "__new__") {
+    cat = prompt("Yeni kategori adı:");
+    if (!cat) return;
+  }
+
+  if (editingProductId) {
+    MenuDB.update(editingProductId, { emoji, name, desc, price, popular, cat, available:true });
+    showToast("Ürün güncellendi ✓");
+  } else {
+    MenuDB.add({ emoji, name, desc, price, popular, cat, available:true });
+    showToast("Ürün eklendi ✓");
+  }
+  closeModal("addProductModal");
+  renderMenuManage();
+}
+
+/* ══════════════════════════════════════════════════════
+   COUPON VIEW
+══════════════════════════════════════════════════════ */
+function renderCoupons() {
+  renderCouponStats();
+  renderCouponList();
+}
+
+function renderCouponStats() {
+  const all    = CouponDB.getAll();
+  const active = all.filter(c => c.active).length;
+  const total  = all.length;
+  const used   = all.reduce((s, c) => s + (c.usedCount || 0), 0);
+
+  const container = document.getElementById("cpStats");
+  if (!container) return;
+  container.innerHTML = `
+    <div class="cp-stat">
+      <div class="cp-stat-icon" style="background:var(--accent-bg);color:var(--accent)"><i class="fa-solid fa-ticket"></i></div>
+      <div><div class="cp-stat-val">${total}</div><div class="cp-stat-label">Toplam Kupon</div></div>
+    </div>
+    <div class="cp-stat">
+      <div class="cp-stat-icon" style="background:var(--green-bg);color:var(--green)"><i class="fa-solid fa-check-circle"></i></div>
+      <div><div class="cp-stat-val">${active}</div><div class="cp-stat-label">Aktif</div></div>
+    </div>
+    <div class="cp-stat">
+      <div class="cp-stat-icon" style="background:var(--orange-bg);color:var(--orange)"><i class="fa-solid fa-ban"></i></div>
+      <div><div class="cp-stat-val">${total - active}</div><div class="cp-stat-label">Pasif</div></div>
+    </div>
+    <div class="cp-stat">
+      <div class="cp-stat-icon" style="background:var(--blue-bg);color:var(--blue)"><i class="fa-solid fa-fire"></i></div>
+      <div><div class="cp-stat-val">${used}</div><div class="cp-stat-label">Toplam Kullanım</div></div>
+    </div>
+  `;
+}
+
+function setCpType(type) {
+  document.getElementById("cpType").value = type;
+  document.getElementById("cpTypePct").classList.toggle("active", type === "percent");
+  document.getElementById("cpTypeFixed").classList.toggle("active", type === "fixed");
+  updateCpPreview();
+}
+
+function updateCpPreview() {
+  const code  = document.getElementById("cpCode")?.value || "";
+  const type  = document.getElementById("cpType")?.value || "percent";
+  const value = parseFloat(document.getElementById("cpValue")?.value) || 0;
+  const badge = document.getElementById("cpPreviewBadge");
+  const info  = document.getElementById("cpPreviewInfo");
+  if (!badge || !info) return;
+
+  if (code && value > 0) {
+    badge.textContent = type === "percent" ? `%${value}` : formatMoney(value);
+    info.innerHTML = `<b style="color:var(--text2)">${code}</b> kodu ile <b style="color:var(--text2)">${type === "percent" ? `%${value} indirim` : `${formatMoney(value)} indirim`}</b>`;
+  } else {
+    badge.textContent = "—";
+    info.textContent  = "Kod ve değer girerek önizleme görün.";
+  }
+}
+
+function addCoupon() {
+  const code   = document.getElementById("cpCode")?.value.trim().toUpperCase();
+  const type   = document.getElementById("cpType")?.value || "percent";
+  const value  = parseFloat(document.getElementById("cpValue")?.value);
+  const min    = parseFloat(document.getElementById("cpMin")?.value) || 0;
+  const limit  = parseInt(document.getElementById("cpLimit")?.value) || null;
+  const desc   = document.getElementById("cpDesc")?.value.trim();
+  const expiry = document.getElementById("cpExpiry")?.value;
+
+  if (!code)              { showToast("Kupon kodu zorunludur!", "red"); return; }
+  if (!value || value<=0) { showToast("Geçerli bir indirim değeri girin!", "red"); return; }
+  if (CouponDB.getAll().find(c => c.code === code)) { showToast("Bu kod zaten mevcut!", "red"); return; }
+
+  CouponDB.add({ code, type, value, min, limit, desc, expiry });
+  ["cpCode","cpValue","cpMin","cpLimit","cpDesc","cpExpiry"].forEach(id => {
+    const el = document.getElementById(id); if (el) el.value = "";
+  });
+  updateCpPreview();
+  renderCoupons();
+  updateCouponNavBadge();
+  showToast("Kupon eklendi ✓");
+}
+
+function setCpFilter(f) {
+  cpCurrentFilter = f;
+  ["all","active","inactive"].forEach(id => {
+    document.getElementById("filter-" + id)?.classList.toggle("active", id === f);
+  });
+  renderCouponList();
+}
+
+function renderCouponList() {
+  const list = document.getElementById("couponListBody");
+  if (!list) return;
+
+  let all = CouponDB.getAll();
+  if (cpCurrentFilter === "active")   all = all.filter(c => c.active);
+  if (cpCurrentFilter === "inactive") all = all.filter(c => !c.active);
+
+  const badge = document.getElementById("cpCountBadge");
+  if (badge) badge.textContent = CouponDB.getAll().length + " kupon";
+
+  if (all.length === 0) {
+    list.innerHTML = `<div class="cp-empty"><div class="cp-empty-icon">🎟️</div><p>Kupon bulunamadı</p></div>`;
+    return;
+  }
+
+  const today = new Date().toISOString().slice(0,10);
+  list.innerHTML = all.map(c => {
+    const isExpired = c.expiry && c.expiry < today;
+    const typeClass = c.type === "percent" ? "pct" : "fixed";
+    const valLabel  = c.type === "percent" ? `%${c.value}` : formatMoney(c.value);
+    const statusText = !c.active ? "Pasif" : isExpired ? "Süresi Dolmuş" : "Aktif";
+    const statusClass = !c.active ? "status-inactive" : isExpired ? "status-expired" : "status-active";
+
+    return `
+      <div class="cp-card ${!c.active ? "inactive" : ""}">
+        <div class="cp-card-main">
+          <div class="cp-card-band ${c.active ? typeClass : "inactive"}"></div>
+          <div class="cp-card-code">
+            <div class="cp-card-code-text">${c.code}</div>
+            <div class="cp-card-code-sub">${c.type === "percent" ? "Yüzde" : "Sabit"}</div>
+          </div>
+          <div class="cp-card-details">
+            <div class="cp-card-row1">
+              <span class="cp-badge type-${typeClass}">${c.type === "percent" ? "%" : "₺"} indirim</span>
+              <span class="cp-badge ${statusClass}">${statusText}</span>
+            </div>
+            <div class="cp-card-desc">${c.desc || "Açıklama yok"}</div>
+            <div class="cp-card-meta">
+              ${c.min > 0 ? `<span><i class="fa-solid fa-cart-shopping"></i>Min. ${formatMoney(c.min)}</span>` : ""}
+              <span><i class="fa-solid fa-fire"></i>${c.usedCount || 0}${c.limit ? "/" + c.limit : ""} kullanım</span>
+              ${c.expiry ? `<span><i class="fa-regular fa-calendar"></i>${c.expiry}</span>` : ""}
+            </div>
+          </div>
+          <div class="cp-card-value">
+            <div class="cp-card-value-num ${typeClass}">${valLabel}</div>
+            <div class="cp-card-value-label">indirim</div>
+          </div>
+          <div class="cp-card-actions">
+            <button class="cp-action-btn ${c.active ? "toggle-on" : "toggle-off"}" onclick="toggleCoupon('${c.id}')" title="${c.active ? "Pasife Al" : "Aktif Et"}">
+              <i class="fa-solid ${c.active ? "fa-eye" : "fa-eye-slash"}"></i>
+            </button>
+            <button class="cp-action-btn delete" onclick="deleteCoupon('${c.id}')" title="Sil">
+              <i class="fa-solid fa-trash"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+    `;
+  }).join("");
+}
+
+function toggleCoupon(id) {
+  CouponDB.toggle(id);
+  renderCoupons();
+  updateCouponNavBadge();
+}
+function deleteCoupon(id) {
+  if (!confirm("Bu kuponu silmek istediğinize emin misiniz?")) return;
+  CouponDB.delete(id);
+  renderCoupons();
+  updateCouponNavBadge();
+  showToast("Kupon silindi");
+}
+
+function updateCouponNavBadge() {
+  const badge = document.getElementById("couponNavBadge");
+  if (!badge) return;
+  const count = CouponDB.getAll().filter(c => c.active).length;
+  badge.textContent = count;
+  badge.style.display = count > 0 ? "flex" : "none";
+}
+
+
+/* ══════════════════════════════════════════════════════
+   SETTINGS VIEW
+══════════════════════════════════════════════════════ */
+
+let _editingStaffId = null;
+let _selectedStaffColor = "#C8A96E";
+
+function renderSettings() {
+  renderSettingsStaffList();
+  renderBizDisplay();
+}
+
+function renderBizDisplay() {
+  const s = SettingsDB.get();
+  const bizName = s.bizName || "AURA Coffee & Kitchen";
+  const taxRate = s.taxRate || 8;
+  const nameEl = document.getElementById("bizNameDisplay");
+  const taxEl  = document.getElementById("taxRateDisplay");
+  if (nameEl) nameEl.textContent = bizName;
+  if (taxEl)  taxEl.textContent  = "%" + taxRate;
+}
+
+function applyBizBranding() {
+  const s = SettingsDB.get();
+  const bizName = s.bizName || "AURA Coffee & Kitchen";
+
+  // Sayfa başlığı
+  document.title = bizName + " — POS";
+
+  // Sidebar logo (ilk harf)
+  const logoEl = document.querySelector(".sidebar-logo");
+  if (logoEl) logoEl.textContent = bizName[0]?.toUpperCase() || "A";
+
+  // Lock screen başlık
+  const lockTitleEl = document.querySelector(".lock-title");
+  if (lockTitleEl) lockTitleEl.textContent = bizName;
+
+  // Settings gösterim alanları
+  renderBizDisplay();
+}
+
+function renderSettingsStaffList() {
+  const container = document.getElementById("staffList");
+  if (!container) return;
+  const users = UserDB.getAll();
+  if (users.length === 0) {
+    container.innerHTML = `<div style="text-align:center;color:var(--text3);padding:24px 0;">Henüz personel yok</div>`;
+    return;
+  }
+  container.innerHTML = users.map(u => `
+    <div class="staff-settings-row ${u.active === false ? 'staff-inactive' : ''}">
+      <div class="staff-avatar-sm" style="background:${u.color || '#C8A96E'};color:#0a0a0a;">${u.avatar}</div>
+      <div style="flex:1;min-width:0;">
+        <div style="font-weight:600;font-size:14px;color:${u.active===false?'var(--text3)':'var(--text)'};">${u.name}</div>
+        <div style="font-size:12px;color:var(--text2);margin-top:2px;">
+          <span class="staff-role-badge ${u.role==='admin'?'admin':u.role==='barista'?'barista':'waiter'}">${roleLabel(u.role)}</span>
+          <span style="margin-left:8px;opacity:.6;">PIN: ${u.pin}</span>
+          ${u.active===false ? '<span style="margin-left:8px;color:var(--red);opacity:.8;">● Pasif</span>' : ''}
+        </div>
+      </div>
+      <div style="display:flex;gap:6px;align-items:center;">
+        <button class="staff-action-btn" onclick="openStaffModal('${u.id}')" title="Düzenle">
+          <i class="fa-solid fa-pen"></i>
+        </button>
+        <button class="staff-action-btn ${u.active===false?'activate':'deactivate'}" onclick="toggleStaffActive('${u.id}')" title="${u.active===false?'Aktif Et':'Pasife Al'}">
+          <i class="fa-solid ${u.active===false?'fa-user-check':'fa-user-slash'}"></i>
+        </button>
+        ${u.id !== (currentUser && currentUser.id) && u.role !== 'admin' ? `
+        <button class="staff-action-btn delete" onclick="deleteStaff('${u.id}')" title="Sil">
+          <i class="fa-solid fa-trash"></i>
+        </button>` : `<button class="staff-action-btn" style="opacity:.2;cursor:not-allowed;" disabled title="Kendinizi veya müdürü silemezsiniz"><i class="fa-solid fa-lock"></i></button>`}
+      </div>
+    </div>
+  `).join("");
+}
+
+function openStaffModal(userId = null) {
+  _editingStaffId = userId;
+  _selectedStaffColor = "#C8A96E";
+
+  document.getElementById("staffModalTitle").textContent = userId ? "Personel Düzenle" : "Personel Ekle";
+  document.getElementById("editStaffId").value   = userId || "";
+  document.getElementById("staffPinConflict").style.display = "none";
+
+  if (userId) {
+    const u = UserDB.getById(userId);
+    if (!u) return;
+    document.getElementById("editStaffName").value   = u.name;
+    document.getElementById("editStaffAvatar").value = u.avatar;
+    document.getElementById("editStaffRole").value   = u.role;
+    document.getElementById("editStaffPin").value    = u.pin;
+    document.getElementById("editStaffColor").value  = u.color || "#C8A96E";
+    _selectedStaffColor = u.color || "#C8A96E";
+  } else {
+    document.getElementById("editStaffName").value   = "";
+    document.getElementById("editStaffAvatar").value = "";
+    document.getElementById("editStaffRole").value   = "barista";
+    document.getElementById("editStaffPin").value    = "";
+    document.getElementById("editStaffColor").value  = "#C8A96E";
+  }
+
+  // Color chips
+  document.querySelectorAll(".color-chip").forEach(chip => {
+    chip.classList.toggle("selected", chip.style.background === _selectedStaffColor ||
+      chip.style.backgroundColor === _selectedStaffColor);
+  });
+
+  openModal("staffModal");
+}
+
+function autoFillAvatar() {
+  const nameVal = document.getElementById("editStaffName").value.trim();
+  const avatarEl = document.getElementById("editStaffAvatar");
+  if (!avatarEl.value || avatarEl.dataset.auto === "1") {
+    // Pick first letter of last word (like "Efe" from "Barista Efe")
+    const parts = nameVal.split(" ").filter(Boolean);
+    avatarEl.value = parts.length ? parts[parts.length-1][0].toUpperCase() : "";
+    avatarEl.dataset.auto = "1";
+  }
+}
+
+function selectStaffColor(color, el) {
+  _selectedStaffColor = color;
+  document.getElementById("editStaffColor").value = color;
+  document.querySelectorAll(".color-chip").forEach(c => c.classList.remove("selected"));
+  el.classList.add("selected");
+}
+
+function saveStaff() {
+  const name   = document.getElementById("editStaffName").value.trim();
+  const avatar = document.getElementById("editStaffAvatar").value.trim().toUpperCase() || name[0]?.toUpperCase() || "?";
+  const role   = document.getElementById("editStaffRole").value;
+  const pin    = document.getElementById("editStaffPin").value.trim();
+  const color  = document.getElementById("editStaffColor").value || "#C8A96E";
+  const editId = document.getElementById("editStaffId").value;
+
+  if (!name)        { showToast("İsim zorunludur!", "red"); return; }
+  if (!/^\d{4}$/.test(pin)) { showToast("PIN tam 4 rakam olmalı!", "red"); return; }
+
+  // Check PIN conflict
+  const conflict = UserDB.getAll().find(u => u.pin === pin && u.id !== editId);
+  if (conflict) {
+    document.getElementById("staffPinConflict").style.display = "block";
+    showToast("Bu PIN zaten kullanılıyor!", "red");
+    return;
+  }
+  document.getElementById("staffPinConflict").style.display = "none";
+
+  const all = UserDB.getAll();
+  if (editId) {
+    const idx = all.findIndex(u => u.id === editId);
+    if (idx >= 0) {
+      all[idx] = { ...all[idx], name, avatar, role, pin, color };
+      UserDB.save(all);
+      // If editing current user, update sidebar
+      if (currentUser && currentUser.id === editId) {
+        currentUser = { ...currentUser, name, avatar, role, pin, color };
+        SessionDB.set(currentUser);
+        document.getElementById("staffPillAvatar").textContent = avatar;
+        document.getElementById("staffPillAvatar").style.background = color;
+        document.getElementById("staffPillName").textContent = name;
+        document.getElementById("staffPillRole").textContent = roleLabel(role);
+      }
+      showToast("Personel güncellendi ✓");
+    }
+  } else {
+    const newUser = {
+      id: "u" + Date.now(),
+      name, avatar, role, pin, color,
+      active: true
+    };
+    all.push(newUser);
+    UserDB.save(all);
+    showToast("Personel eklendi ✓");
+  }
+
+  closeModal("staffModal");
+  renderSettingsStaffList();
+}
+
+function toggleStaffActive(userId) {
+  if (currentUser && currentUser.id === userId) {
+    showToast("Kendi hesabınızı pasife alamazsınız!", "red");
+    return;
+  }
+  const all = UserDB.getAll();
+  const idx = all.findIndex(u => u.id === userId);
+  if (idx < 0) return;
+  const wasActive = all[idx].active !== false;
+  all[idx].active = !wasActive;
+  UserDB.save(all);
+  showToast(wasActive ? "Personel pasife alındı" : "Personel aktif edildi", wasActive ? "orange" : "green");
+  renderSettingsStaffList();
+}
+
+function deleteStaff(userId) {
+  const u = UserDB.getById(userId);
+  if (!u) return;
+  if (currentUser && currentUser.id === userId) {
+    showToast("Kendi hesabınızı silemezsiniz!", "red");
+    return;
+  }
+  if (u.role === "admin") {
+    showToast("Müdür hesabı silinemez!", "red");
+    return;
+  }
+  if (!confirm(`"${u.name}" adlı personeli silmek istiyor musunuz?`)) return;
+  const all = UserDB.getAll().filter(u2 => u2.id !== userId);
+  UserDB.save(all);
+  showToast("Personel silindi");
+  renderSettingsStaffList();
+}
+
+function openBizModal() {
+  const s = SettingsDB.get();
+  document.getElementById("editBizName").value  = s.bizName || "AURA Coffee & Kitchen";
+  document.getElementById("editTaxRate").value  = s.taxRate || 8;
+  openModal("bizModal");
+}
+
+function saveBizSettings() {
+  const name = document.getElementById("editBizName").value.trim();
+  const tax  = parseFloat(document.getElementById("editTaxRate").value);
+  if (!name)        { showToast("İşletme adı zorunludur!", "red"); return; }
+  if (isNaN(tax) || tax < 0 || tax > 100) { showToast("Geçerli bir KDV oranı girin (0-100)!", "red"); return; }
+
+  const s = SettingsDB.get();
+  s.bizName = name;
+  s.taxRate = tax;
+  SettingsDB.save(s);
+
+  // Tüm arayüz elemanlarını anında güncelle
+  applyBizBranding();
+
+  closeModal("bizModal");
+  showToast("İşletme bilgileri güncellendi ✓");
+}
+
+
+function openModal(id)  { document.getElementById(id)?.classList.add("open"); }
+function closeModal(id) { document.getElementById(id)?.classList.remove("open"); }
+
+/* ══════════════════════════════════════════════════════
+   TOAST
+══════════════════════════════════════════════════════ */
+let _toastTimer = null;
+function showToast(msg, color = "green") {
+  const toast = document.getElementById("toast");
+  const dot   = document.getElementById("toastDot");
+  const span  = document.getElementById("toastMsg");
+  if (!toast) return;
+  if (span) span.textContent = msg;
+  if (dot)  dot.style.background = color === "red" ? "var(--red)" : color === "orange" ? "var(--orange)" : "var(--green)";
+  toast.classList.add("show");
+  clearTimeout(_toastTimer);
+  _toastTimer = setTimeout(() => toast.classList.remove("show"), 2500);
+}
+
+/* ══════════════════════════════════════════════════════
+   RECEIPT
+══════════════════════════════════════════════════════ */
+function printReceipt() {
+  const o = window._lastPrintOrder;
+  if (!o) { showToast("Fiş verisi bulunamadı!", "red"); return; }
+
+  const s        = SettingsDB.get();
+  const bizName  = s.bizName  || "AURA Coffee & Kitchen";
+  const taxRate  = s.taxRate  || 8;
+  const now      = new Date(o.createdAt);
+  const dateStr  = now.toLocaleDateString("tr-TR", { day:"2-digit", month:"2-digit", year:"numeric" });
+  const timeStr  = now.toLocaleTimeString("tr-TR", { hour:"2-digit", minute:"2-digit" });
+  const staff    = o.userId ? (UserDB.getById(o.userId)?.name || "—") : "—";
+  const totalQty = o.items.reduce((s, i) => s + i.qty, 0);
+  const taxAmt   = o.total * taxRate / (100 + taxRate);
+  const netAmt   = o.total - taxAmt;
+
+  const payLabel = {
+    cash:  "Nakit",
+    card:  "Kredi Kartı",
+    split: "Bölüşüm"
+  }[o.paymentMethod] || (o.paid ? "Ödendi" : "Masa Hesabı");
+
+  const itemRows = o.items.map(i => {
+    const lineTotal = i.price * i.qty;
+    const name = `${i.emoji || ""} ${i.name}`.trim();
+    const nameShort = name.length > 22 ? name.slice(0, 21) + "…" : name;
+    return `
+      <tr>
+        <td style="padding:2px 0;vertical-align:top">${nameShort}</td>
+        <td style="text-align:center;vertical-align:top;white-space:nowrap">${i.qty}×</td>
+        <td style="text-align:right;vertical-align:top;white-space:nowrap">${formatMoney(i.price)}</td>
+        <td style="text-align:right;vertical-align:top;white-space:nowrap;font-weight:600">${formatMoney(lineTotal)}</td>
+      </tr>`;
+  }).join("");
+
+  const html = `<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <title>Fiş #${o.num}</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@400;600;700&display=swap');
+
+    * { margin:0; padding:0; box-sizing:border-box; }
+
+    body {
+      font-family: 'DM Mono', 'Courier New', monospace;
+      font-size: 12px;
+      background: #fff;
+      color: #111;
+      display: flex;
+      justify-content: center;
+      padding: 20px 0;
+    }
+
+    .receipt {
+      width: 80mm;
+      padding: 0 4mm;
+    }
+
+    /* ── HEADER ── */
+    .header {
+      text-align: center;
+      padding-bottom: 10px;
+      margin-bottom: 10px;
+      border-bottom: 1px dashed #aaa;
+    }
+    .logo-box {
+      width: 44px; height: 44px;
+      background: #111;
+      border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      margin: 0 auto 8px;
+      font-family: 'DM Sans', sans-serif;
+      font-weight: 800; font-size: 20px; color: #fff;
+      letter-spacing: -1px;
+    }
+    .biz-name {
+      font-family: 'DM Sans', sans-serif;
+      font-size: 16px; font-weight: 700;
+      letter-spacing: -.3px;
+      margin-bottom: 2px;
+    }
+    .biz-sub {
+      font-size: 10px;
+      color: #666;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+    }
+
+    /* ── META ── */
+    .meta {
+      font-size: 11px;
+      margin-bottom: 10px;
+    }
+    .meta-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 2px 0;
+    }
+    .meta-key { color: #666; }
+    .meta-val { font-weight: 500; }
+    .order-num-big {
+      font-family: 'DM Sans', sans-serif;
+      font-size: 26px; font-weight: 800;
+      text-align: center;
+      letter-spacing: -1px;
+      margin: 8px 0 4px;
+    }
+
+    /* ── DIVIDER ── */
+    .divider { border: none; border-top: 1px dashed #aaa; margin: 8px 0; }
+    .divider-solid { border: none; border-top: 1px solid #111; margin: 8px 0; }
+
+    /* ── ITEMS TABLE ── */
+    .items-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 11.5px;
+      margin-bottom: 2px;
+    }
+    .items-table thead th {
+      font-size: 9px;
+      text-transform: uppercase;
+      letter-spacing: .8px;
+      color: #888;
+      padding: 0 0 4px 0;
+      font-weight: 500;
+    }
+    .items-table thead th:nth-child(2),
+    .items-table thead th:nth-child(3),
+    .items-table thead th:nth-child(4) { text-align: right; }
+    .items-table thead th:nth-child(2) { text-align: center; }
+
+    /* ── TOTALS ── */
+    .totals { margin-top: 6px; }
+    .total-row {
+      display: flex;
+      justify-content: space-between;
+      font-size: 11px;
+      padding: 2px 0;
+      color: #444;
+    }
+    .total-row.discount { color: #1a8c4e; }
+    .total-grand {
+      display: flex;
+      justify-content: space-between;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 17px;
+      font-weight: 800;
+      padding: 6px 0 4px;
+    }
+    .total-grand span:last-child { letter-spacing: -.5px; }
+
+    /* ── PAYMENT ── */
+    .payment-badge {
+      display: inline-block;
+      background: #111;
+      color: #fff;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 11px;
+      font-weight: 700;
+      padding: 4px 12px;
+      border-radius: 20px;
+      letter-spacing: .3px;
+      margin: 4px 0;
+    }
+    .pending-badge {
+      display: inline-block;
+      border: 1.5px dashed #aaa;
+      color: #888;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 10px;
+      font-weight: 600;
+      padding: 4px 12px;
+      border-radius: 20px;
+      letter-spacing: .3px;
+      margin: 4px 0;
+    }
+
+    /* ── TAX ── */
+    .tax-block {
+      font-size: 10px;
+      color: #999;
+      border-top: 1px dashed #ccc;
+      margin-top: 6px;
+      padding-top: 6px;
+    }
+    .tax-row { display: flex; justify-content: space-between; padding: 1px 0; }
+
+    /* ── NOTE ── */
+    .note-block {
+      background: #f5f5f5;
+      border-left: 3px solid #111;
+      padding: 6px 8px;
+      font-size: 11px;
+      color: #333;
+      margin-top: 6px;
+      border-radius: 0 4px 4px 0;
+    }
+    .note-label { font-size: 9px; color: #999; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 2px; }
+
+    /* ── FOOTER ── */
+    .footer {
+      text-align: center;
+      margin-top: 12px;
+      padding-top: 10px;
+      border-top: 1px dashed #aaa;
+      font-size: 10px;
+      color: #aaa;
+      line-height: 1.8;
+    }
+    .footer strong { color: #555; font-size: 11px; }
+
+    /* Barcode placeholder */
+    .barcode {
+      font-family: monospace;
+      font-size: 28px;
+      letter-spacing: -2px;
+      color: #111;
+      margin: 6px 0 2px;
+      line-height: 1;
+    }
+    .barcode-num { font-size: 9px; color: #aaa; letter-spacing: 3px; }
+
+    @media print {
+      body { padding: 0; background: white; }
+      .receipt { padding: 0 2mm; }
+      @page { margin: 4mm; size: 80mm auto; }
+    }
+  </style>
+</head>
+<body>
+<div class="receipt">
+
+  <!-- HEADER -->
+  <div class="header">
+    <div class="logo-box">${bizName[0]?.toUpperCase() || "A"}</div>
+    <div class="biz-name">${bizName}</div>
+    <div class="biz-sub">Satış Fişi</div>
+  </div>
+
+  <!-- SIPARIŞ NO -->
+  <div class="order-num-big">#${o.num}</div>
+
+  <!-- META -->
+  <div class="meta">
+    <div class="meta-row"><span class="meta-key">Tarih</span><span class="meta-val">${dateStr}</span></div>
+    <div class="meta-row"><span class="meta-key">Saat</span><span class="meta-val">${timeStr}</span></div>
+    <div class="meta-row"><span class="meta-key">Masa / Tür</span><span class="meta-val">${o.tableLabel}</span></div>
+    <div class="meta-row"><span class="meta-key">Personel</span><span class="meta-val">${staff}</span></div>
+    ${o.couponCode ? `<div class="meta-row"><span class="meta-key">Kupon</span><span class="meta-val">${o.couponCode}</span></div>` : ""}
+  </div>
+
+  <hr class="divider">
+
+  <!-- ÜRÜNLER -->
+  <table class="items-table">
+    <thead>
+      <tr>
+        <th style="text-align:left">Ürün</th>
+        <th>Adet</th>
+        <th style="text-align:right">Fiyat</th>
+        <th style="text-align:right">Tutar</th>
+      </tr>
+    </thead>
+    <tbody>
+      ${itemRows}
+    </tbody>
+  </table>
+
+  <!-- TOPLAMLAR -->
+  <div class="totals">
+    <hr class="divider">
+    <div class="total-row">
+      <span>Ara Toplam (${totalQty} ürün)</span>
+      <span>${formatMoney(o.subtotal)}</span>
+    </div>
+    ${o.discount > 0 ? `
+    <div class="total-row discount">
+      <span>İndirim ${o.couponCode ? "("+o.couponCode+")" : ""}</span>
+      <span>-${formatMoney(o.discount)}</span>
+    </div>` : ""}
+    <hr class="divider-solid">
+    <div class="total-grand">
+      <span>TOPLAM</span>
+      <span>${formatMoney(o.total)}</span>
+    </div>
+
+    <!-- ÖDEME -->
+    <div style="text-align:center;margin:4px 0 6px">
+      ${o.paid
+        ? `<span class="payment-badge">✓ ${payLabel}</span>`
+        : `<span class="pending-badge">⏳ Ödeme Bekleniyor</span>`
+      }
+    </div>
+
+    <!-- VERGİ DETAYI -->
+    <div class="tax-block">
+      <div class="tax-row"><span>KDV Matrahı (%${taxRate})</span><span>${formatMoney(netAmt)}</span></div>
+      <div class="tax-row"><span>KDV Tutarı</span><span>${formatMoney(taxAmt)}</span></div>
+    </div>
+  </div>
+
+  ${o.note ? `
+  <!-- NOT -->
+  <div class="note-block">
+    <div class="note-label">📝 Not</div>
+    ${o.note}
+  </div>` : ""}
+
+  <!-- FOOTER -->
+  <div class="footer">
+    <div class="barcode">|||||||||||||||||||||||</div>
+    <div class="barcode-num">#${String(o.num).padStart(6,"0")}-${o.id.slice(-6).toUpperCase()}</div>
+    <br>
+    <strong>${bizName}</strong><br>
+    ${dateStr} — ${timeStr}<br>
+    Teşekkür ederiz, iyi günler! ☕
+  </div>
+
+</div>
+<script>
+  window.onload = function() {
+    setTimeout(function() { window.print(); }, 300);
+  };
+<\/script>
+</body>
+</html>`;
+
+  const w = window.open("", "_blank", "width=380,height=700,scrollbars=yes");
+  if (!w) { showToast("Pop-up engellendi! Tarayıcıda pop-up'a izin verin.", "red"); return; }
+  w.document.write(html);
+  w.document.close();
+  closeModal("successModal");
+  showToast("Fiş yazdırılıyor... 🖨️");
 }
