@@ -1,4 +1,4 @@
-  <!DOCTYPE html>
+<!DOCTYPE html>
   <html lang="tr">
   <head>
     <meta charset="UTF-8">
@@ -146,6 +146,38 @@
       </div>
     </aside>
 
+    <!-- MOBİL PROFİL BUTONU — Ayarlar/Çıkış masaüstünde sidebar altında
+         görünür, ama mobilde sidebar-bottom gizlendiği için bu buton
+         onların yerine geçiyor (sadece ≤520px'de görünür). -->
+    <button class="mobile-profile-btn" id="mobileProfileBtn" onclick="openModal('mobileProfileModal')">
+      <span id="mobileProfileAvatarMini">K</span>
+    </button>
+
+    <div class="modal-overlay" id="mobileProfileModal">
+      <div class="modal" style="max-width:340px;padding:0;overflow:hidden;">
+        <div class="modal-header">
+          <div class="modal-title" style="font-size:17px;margin-bottom:0;">Profil</div>
+          <button class="modal-close" onclick="closeModal('mobileProfileModal')"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <div class="modal-body" style="align-items:center;text-align:center;">
+          <div class="staff-pill-avatar" id="mobileProfileAvatar" style="width:52px;height:52px;font-size:20px;">K</div>
+          <div>
+            <div style="font-size:15px;font-weight:600;color:var(--text)" id="mobileProfileName">Kerem</div>
+            <div style="font-size:12px;color:var(--text3)" id="mobileProfileRole">Müdür</div>
+          </div>
+        </div>
+        <div class="modal-footer" style="flex-direction:column;">
+          <button class="modal-btn secondary" style="width:100%" id="mobileProfileSettingsBtn"
+                  onclick="closeModal('mobileProfileModal'); switchView('settings');">
+            <i class="fa-solid fa-gear"></i>&nbsp; Ayarlar
+          </button>
+          <button class="modal-btn secondary" style="width:100%;color:var(--red)" onclick="closeModal('mobileProfileModal'); logout();">
+            <i class="fa-solid fa-right-from-bracket"></i>&nbsp; Çıkış
+          </button>
+        </div>
+      </div>
+    </div>
+
     <!-- VIEWS WRAPPER -->
 
 
@@ -176,6 +208,10 @@
           </div>
           <!-- Sipariş paneli -->
           <div class="order-panel">
+            <!-- Mobilde paneli yukarı/aşağı sürüklemek için tutamaç -->
+            <div class="order-panel-handle" id="orderPanelHandle">
+              <span class="order-panel-handle-bar"></span>
+            </div>
             <div class="order-header">
               <div class="order-header-top">
                 <div class="order-title">Sipariş</div>
@@ -331,6 +367,7 @@
             <div class="topbar-meta clock-date"></div>
           </div>
           <div class="topbar-right">
+            <input type="date" id="reportDateInput" class="topbar-btn" style="cursor:pointer;color:var(--text);" onchange="onReportDateChange()">
             <button class="topbar-btn accent-btn" id="pdfExportBtn" onclick="exportReportPDF()">
               <i class="fa-solid fa-file-pdf"></i> PDF İndir
             </button>
@@ -354,9 +391,9 @@
               <div class="chart-header">
                 <div class="chart-title-group">
                   <div class="chart-title">Saatlik Satış</div>
-                  <div class="chart-sub">Bugünkü satış dağılımı</div>
+                  <div class="chart-sub" id="dailySub1">Bugünkü satış dağılımı</div>
                 </div>
-                <div class="chart-badge">Bugün</div>
+                <div class="chart-badge" id="dailyBadge1">Bugün</div>
               </div>
               <div class="bar-chart" id="barChart"></div>
             </div>
@@ -366,7 +403,7 @@
                   <div class="chart-title">Kategori Dağılımı</div>
                   <div class="chart-sub">Satış oranları</div>
                 </div>
-                <div class="chart-badge">Bugün</div>
+                <div class="chart-badge" id="dailyBadge2">Bugün</div>
               </div>
               <div class="donut-wrap" id="donutWrap"></div>
             </div>
@@ -375,9 +412,9 @@
             <div class="chart-header">
               <div class="chart-title-group">
                 <div class="chart-title">Tüm Siparişler</div>
-                <div class="chart-sub">Bugünkü sipariş geçmişi</div>
+                <div class="chart-sub" id="dailySub3">Bugünkü sipariş geçmişi</div>
               </div>
-              <div class="chart-badge">Bugün</div>
+              <div class="chart-badge" id="dailyBadge3">Bugün</div>
             </div>
             <div class="order-history" id="orderHistory"></div>
           </div>
@@ -725,9 +762,16 @@
             </select>
           </div>
           <div class="form-group">
-            <div class="form-label">PIN (4 Hane) *</div>
+            <div class="form-label" id="editStaffPinLabel">PIN (4 Hane) *</div>
             <input type="text" class="form-input" id="editStaffPin" placeholder="0000" maxlength="4" inputmode="numeric" pattern="[0-9]{4}">
           </div>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px;margin:-4px 0 4px;">
+          <label class="toggle-switch">
+            <input type="checkbox" id="editStaffNoPin" onchange="toggleStaffNoPinUI()">
+            <span class="toggle-slider"></span>
+          </label>
+          <span style="font-size:13px;color:var(--text2);">Şifresiz giriş (PIN sorulmadan doğrudan giriş yapar)</span>
         </div>
         <div class="form-group">
           <div class="form-label">Renk</div>
