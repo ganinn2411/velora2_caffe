@@ -55,10 +55,13 @@ document.addEventListener("DOMContentLoaded", () => {
       showLockScreen();
     }
 
-    // Bulut bağlantı durumunu göster (DevTools'a girmeden anlamak için)
+    // Bulut bağlantı durumunu göster (DevTools'a girmeden anlamak için).
+    // Bağlantı başarılıysa artık toast gösterilmiyor (her açılışta sipariş
+    // panelinin üstüne biniyordu) — sadece konsola yazılıyor. Sorun varsa
+    // (offline/error) uyarı toast'u yine gösteriliyor, çünkü o önemli.
     setTimeout(() => {
       if (window.AURA_CLOUD_STATUS === "connected") {
-        showToast("Bulut bağlantısı aktif ✓ — veriler tüm cihazlarda senkron", "green");
+        console.log("Bulut bağlantısı aktif ✓ — veriler tüm cihazlarda senkron");
       } else if (window.AURA_CLOUD_STATUS === "offline") {
         showToast("Bulut bağlı değil — sadece bu cihazda çalışıyor (" + (window.AURA_CLOUD_STATUS_DETAIL||"") + ")", "red");
       } else if (window.AURA_CLOUD_STATUS === "error") {
@@ -119,7 +122,7 @@ function renderStaffButtons() {
     <button class="staff-btn" onclick="selectStaff('${u.id}')">
       <div class="staff-avatar" style="background:${u.color || "#C8A96E"}">${u.avatar}</div>
       <span class="staff-name">${u.name}</span>
-      <span class="staff-role">${roleLabel(u.role)}</span>
+      <span class="staff-role">${roleLabel(u.role)}${u.noPin ? ' <i class="fa-solid fa-lock-open" title="Şifresiz giriş" style="opacity:.7;font-size:9px;"></i>' : ''}</span>
     </button>
   `).join("");
 }
@@ -128,6 +131,13 @@ function selectStaff(userId) {
   selectedUserId = userId;
   const u = UserDB.getById(userId);
   if (!u) return;
+
+  // Şifresiz personel: PIN ekranını hiç göstermeden doğrudan giriş yap
+  if (u.noPin) {
+    loginUser(u);
+    return;
+  }
+
   // PIN ekranına geç
   document.getElementById("lockScreen").style.display = "none";
   document.getElementById("pinScreen").style.display  = "flex";
@@ -201,6 +211,22 @@ function loginUser(u) {
   document.getElementById("staffPillName").textContent          = u.name;
   document.getElementById("staffPillRole").textContent          = roleLabel(u.role);
 
+  // Mobil profil butonu / modalı (sidebar-bottom mobilde gizli olduğu
+  // için Ayarlar/Çıkış'a erişim buradan sağlanıyor)
+  const mpAvatarMini = document.getElementById("mobileProfileAvatarMini");
+  const mpAvatar     = document.getElementById("mobileProfileAvatar");
+  const mpName       = document.getElementById("mobileProfileName");
+  const mpRole       = document.getElementById("mobileProfileRole");
+  const mpSettingsBtn = document.getElementById("mobileProfileSettingsBtn");
+  if (mpAvatarMini) { mpAvatarMini.textContent = u.avatar; }
+  if (mpAvatar) {
+    mpAvatar.textContent      = u.avatar;
+    mpAvatar.style.background = u.color || "";
+    mpAvatar.style.color      = "#0a0a0a";
+  }
+  if (mpName) mpName.textContent = u.name;
+  if (mpRole) mpRole.textContent = roleLabel(u.role);
+
   // Nav görünürlüğü — 3 rol:
   // admin:   hepsi
   // barista: pos, tables, barista
@@ -213,15 +239,18 @@ function loginUser(u) {
 
   if (u.role === "admin") {
     [navBarista, navReports, navMenu, navCoupons, navSettings].forEach(el => el && (el.style.display = "flex"));
+    if (mpSettingsBtn) mpSettingsBtn.style.display = "flex";
   } else if (u.role === "barista") {
     navBarista  && (navBarista.style.display  = "flex");
     navReports  && (navReports.style.display  = "none");
     navMenu     && (navMenu.style.display     = "none");
     navCoupons  && (navCoupons.style.display  = "none");
     navSettings && (navSettings.style.display = "none");
+    if (mpSettingsBtn) mpSettingsBtn.style.display = "none";
   } else {
     // waiter
     [navBarista, navReports, navMenu, navCoupons, navSettings].forEach(el => el && (el.style.display = "none"));
+    if (mpSettingsBtn) mpSettingsBtn.style.display = "none";
   }
 
   switchView("pos");
@@ -340,7 +369,9 @@ function addToCart(productId) {
     cart.push({ id: p.id, name: p.name, emoji: p.emoji, price: p.price, qty: 1 });
   }
   renderOrderPanel();
-  showToast(`${p.emoji} ${p.name} eklendi`);
+  // "X eklendi" bildirimi kaldırıldı — sipariş panelinin üstüne biniyordu.
+  // Ürün eklendiğinde sepet/sipariş paneli zaten anında güncelleniyor,
+  // o yüzden ayrı bir bildirime gerek yok.
 }
 
 function changeQty(productId, delta) {
@@ -986,12 +1017,62 @@ function updateOrderStatus(orderId, status) {
 ══════════════════════════════════════════════════════ */
 let currentReportTab = "daily";
 
+/* ── GÜNLÜK RAPOR: SEÇİLEN TARİH ─────────────────────
+   Müdür/personel üstteki tarih seçiciyle geçmiş bir günün
+   raporunu görüntüleyebilsin diye "bugün" yerine seçilen
+   tarih kullanılır (varsayılan: bugün). */
+let selectedReportDate = new Date();
+
+function _fmtDateInput(d) {
+  // <input type="date"> için YYYY-MM-DD formatı (yerel saat, UTC kaymasız)
+  const y = d.getFullYear(), m = String(d.getMonth()+1).padStart(2,"0"), day = String(d.getDate()).padStart(2,"0");
+  return `${y}-${m}-${day}`;
+}
+
+function _isSameDay(a, b) {
+  return a.getFullYear()===b.getFullYear() && a.getMonth()===b.getMonth() && a.getDate()===b.getDate();
+}
+
+/* Seçilen tarihe ait siparişleri getirir (OrderDB.getToday()'in
+   tarih parametreli genel hali — db.js'e dokunmadan). */
+function getOrdersForDate(dateObj) {
+  const start = new Date(dateObj); start.setHours(0,0,0,0);
+  const end   = new Date(start);   end.setDate(end.getDate() + 1);
+  return OrderDB.getAll().filter(o => {
+    const d = new Date(o.createdAt);
+    return d >= start && d < end;
+  });
+}
+
+/* Rozet/alt başlıklarda göstermek için: bugünse "Bugün",
+   değilse "3 Eylül" gibi kısa tarih. */
+function reportDateLabel(dateObj) {
+  return _isSameDay(dateObj, new Date())
+    ? "Bugün"
+    : dateObj.toLocaleDateString("tr-TR", { day:"numeric", month:"long" });
+}
+
+function onReportDateChange() {
+  const input = document.getElementById("reportDateInput");
+  if (!input || !input.value) return;
+  const [y, m, d] = input.value.split("-").map(Number);
+  selectedReportDate = new Date(y, m - 1, d);
+  if (currentReportTab === "daily") renderDailyReport();
+}
+
 function switchReportTab(tab) {
   currentReportTab = tab;
   document.getElementById("rtab-daily")?.classList.toggle("active", tab === "daily");
   document.getElementById("rtab-monthly")?.classList.toggle("active", tab === "monthly");
   document.getElementById("report-daily").style.display   = tab === "daily"   ? "flex" : "none";
   document.getElementById("report-monthly").style.display = tab === "monthly" ? "flex" : "none";
+  // Tarih seçici sadece Günlük Rapor'da anlamlı — Aylık Rapor her zaman bu ayı gösterir
+  const dateInput = document.getElementById("reportDateInput");
+  if (dateInput) {
+    dateInput.style.display = tab === "daily" ? "" : "none";
+    dateInput.value = _fmtDateInput(selectedReportDate);
+    dateInput.max   = _fmtDateInput(new Date());
+  }
   if (tab === "daily")   renderDailyReport();
   if (tab === "monthly") renderMonthlyReport();
 }
@@ -1002,8 +1083,18 @@ function renderReports() {
 
 /* ── GÜNLÜK RAPOR ────────────────────────────────── */
 function renderDailyReport() {
-  const allToday  = OrderDB.getToday().filter(o => o.status !== "cancelled");
+  const allToday  = getOrdersForDate(selectedReportDate).filter(o => o.status !== "cancelled");
   const paidToday = allToday.filter(o => o.paid);
+
+  const dateLabel = reportDateLabel(selectedReportDate);
+  ["dailyBadge1","dailyBadge2","dailyBadge3"].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.textContent = dateLabel;
+  });
+  const sub1 = document.getElementById("dailySub1");
+  if (sub1) sub1.textContent = dateLabel === "Bugün" ? "Bugünkü satış dağılımı" : `${dateLabel} satış dağılımı`;
+  const sub3 = document.getElementById("dailySub3");
+  if (sub3) sub3.textContent = dateLabel === "Bugün" ? "Bugünkü sipariş geçmişi" : `${dateLabel} sipariş geçmişi`;
 
   const total     = paidToday.reduce((s, o) => s + (o.total || 0), 0);
   const count     = paidToday.length;
@@ -1019,7 +1110,7 @@ function renderDailyReport() {
       <div class="stat-card" style="--card-accent:var(--accent)">
         <div class="stat-card-top">
           <div class="stat-icon" style="background:var(--accent-bg);color:var(--accent)"><i class="fa-solid fa-turkish-lira-sign"></i></div>
-          <div class="stat-trend">Bugün</div>
+          <div class="stat-trend">${dateLabel}</div>
         </div>
         <div class="stat-info">
           <div class="stat-label">Günlük Ciro</div>
@@ -1287,14 +1378,15 @@ function renderTopProducts(orders) {
 function exportReportPDF() {
   const isMonthly = currentReportTab === "monthly";
   const now = new Date();
-  const dateStr  = now.toLocaleDateString("tr-TR", { day:"2-digit", month:"long", year:"numeric" });
+  const reportDate = isMonthly ? now : selectedReportDate;
+  const dateStr  = reportDate.toLocaleDateString("tr-TR", { day:"2-digit", month:"long", year:"numeric" });
   const monthStr = now.toLocaleDateString("tr-TR", { month:"long", year:"numeric" });
 
   let reportData, title, subtitle;
 
   if (!isMonthly) {
-    // GÜNLÜK
-    const allToday  = OrderDB.getToday().filter(o => o.status !== "cancelled");
+    // GÜNLÜK — seçilen tarih
+    const allToday  = getOrdersForDate(selectedReportDate).filter(o => o.status !== "cancelled");
     const paid      = allToday.filter(o => o.paid);
     const total     = paid.reduce((s, o) => s + o.total, 0);
     const count     = paid.length;
@@ -1955,7 +2047,9 @@ function renderSettingsStaffList() {
         <div style="font-weight:600;font-size:14px;color:${u.active===false?'var(--text3)':'var(--text)'};">${u.name}</div>
         <div style="font-size:12px;color:var(--text2);margin-top:2px;">
           <span class="staff-role-badge ${u.role==='admin'?'admin':u.role==='barista'?'barista':'waiter'}">${roleLabel(u.role)}</span>
-          <span style="margin-left:8px;opacity:.6;">PIN: ${u.pin}</span>
+          ${u.noPin
+            ? `<span style="margin-left:8px;color:var(--accent);opacity:.85;"><i class="fa-solid fa-lock-open"></i> Şifresiz</span>`
+            : `<span style="margin-left:8px;opacity:.6;">PIN: ${u.pin}</span>`}
           ${u.active===false ? '<span style="margin-left:8px;color:var(--red);opacity:.8;">● Pasif</span>' : ''}
         </div>
       </div>
@@ -1989,8 +2083,9 @@ function openStaffModal(userId = null) {
     document.getElementById("editStaffName").value   = u.name;
     document.getElementById("editStaffAvatar").value = u.avatar;
     document.getElementById("editStaffRole").value   = u.role;
-    document.getElementById("editStaffPin").value    = u.pin;
+    document.getElementById("editStaffPin").value    = u.pin || "";
     document.getElementById("editStaffColor").value  = u.color || "#C8A96E";
+    document.getElementById("editStaffNoPin").checked = !!u.noPin;
     _selectedStaffColor = u.color || "#C8A96E";
   } else {
     document.getElementById("editStaffName").value   = "";
@@ -1998,7 +2093,9 @@ function openStaffModal(userId = null) {
     document.getElementById("editStaffRole").value   = "barista";
     document.getElementById("editStaffPin").value    = "";
     document.getElementById("editStaffColor").value  = "#C8A96E";
+    document.getElementById("editStaffNoPin").checked = false;
   }
+  toggleStaffNoPinUI();
 
   // Color chips
   document.querySelectorAll(".color-chip").forEach(chip => {
@@ -2007,6 +2104,22 @@ function openStaffModal(userId = null) {
   });
 
   openModal("staffModal");
+}
+
+/* Şifresiz giriş açıldığında PIN alanını devre dışı bırak/gizlemeden,
+   sadece görsel olarak "gerekli değil" haline getir. */
+function toggleStaffNoPinUI() {
+  const noPin   = document.getElementById("editStaffNoPin").checked;
+  const pinInput = document.getElementById("editStaffPin");
+  const pinLabel = document.getElementById("editStaffPinLabel");
+  pinInput.disabled = noPin;
+  pinInput.style.opacity = noPin ? .4 : 1;
+  if (pinLabel) {
+    pinLabel.textContent = noPin
+      ? "PIN (gerekli değil)"
+      : (_editingStaffId ? "PIN (boş bırakılırsa değişmez)" : "PIN (4 Hane) *");
+  }
+  document.getElementById("staffPinConflict").style.display = "none";
 }
 
 function autoFillAvatar() {
@@ -2031,19 +2144,34 @@ function saveStaff() {
   const name   = document.getElementById("editStaffName").value.trim();
   const avatar = document.getElementById("editStaffAvatar").value.trim().toUpperCase() || name[0]?.toUpperCase() || "?";
   const role   = document.getElementById("editStaffRole").value;
-  const pin    = document.getElementById("editStaffPin").value.trim();
+  const noPin  = document.getElementById("editStaffNoPin").checked;
+  const pinRaw = document.getElementById("editStaffPin").value.trim();
   const color  = document.getElementById("editStaffColor").value || "#C8A96E";
   const editId = document.getElementById("editStaffId").value;
+  const existing = editId ? UserDB.getById(editId) : null;
 
-  if (!name)        { showToast("İsim zorunludur!", "red"); return; }
-  if (!/^\d{4}$/.test(pin)) { showToast("PIN tam 4 rakam olmalı!", "red"); return; }
+  if (!name) { showToast("İsim zorunludur!", "red"); return; }
 
-  // Check PIN conflict
-  const conflict = UserDB.getAll().find(u => u.pin === pin && u.id !== editId);
-  if (conflict) {
-    document.getElementById("staffPinConflict").style.display = "block";
-    showToast("Bu PIN zaten kullanılıyor!", "red");
-    return;
+  let pin = "";
+  if (!noPin) {
+    if (pinRaw) {
+      // Kullanıcı PIN'e bir şey yazdıysa doğru formatta olmalı
+      if (!/^\d{4}$/.test(pinRaw)) { showToast("PIN tam 4 rakam olmalı!", "red"); return; }
+      pin = pinRaw;
+    } else if (existing && existing.pin) {
+      // Düzenlemede PIN boş bırakıldıysa zorunlu değil — mevcut PIN korunur
+      pin = existing.pin;
+    } else {
+      // Yeni personel ve PIN girilmemiş — şifresiz olmadığı sürece gerekli
+      showToast("PIN tam 4 rakam olmalı!", "red"); return;
+    }
+    // Check PIN conflict — sadece PIN'li personeller arasında bakılır
+    const conflict = UserDB.getAll().find(u => !u.noPin && u.pin === pin && u.id !== editId);
+    if (conflict) {
+      document.getElementById("staffPinConflict").style.display = "block";
+      showToast("Bu PIN zaten kullanılıyor!", "red");
+      return;
+    }
   }
   document.getElementById("staffPinConflict").style.display = "none";
 
@@ -2051,11 +2179,11 @@ function saveStaff() {
   if (editId) {
     const idx = all.findIndex(u => u.id === editId);
     if (idx >= 0) {
-      all[idx] = { ...all[idx], name, avatar, role, pin, color };
+      all[idx] = { ...all[idx], name, avatar, role, pin, noPin, color };
       UserDB.save(all);
       // If editing current user, update sidebar
       if (currentUser && currentUser.id === editId) {
-        currentUser = { ...currentUser, name, avatar, role, pin, color };
+        currentUser = { ...currentUser, name, avatar, role, pin, noPin, color };
         SessionDB.set(currentUser);
         document.getElementById("staffPillAvatar").textContent = avatar;
         document.getElementById("staffPillAvatar").style.background = color;
@@ -2067,7 +2195,7 @@ function saveStaff() {
   } else {
     const newUser = {
       id: "u" + Date.now(),
-      name, avatar, role, pin, color,
+      name, avatar, role, pin, noPin, color,
       active: true
     };
     all.push(newUser);
@@ -2496,3 +2624,88 @@ function printReceipt() {
   closeModal("successModal");
   showToast("Fiş yazdırılıyor... 🖨️");
 }
+
+/* ═══════════════════════════════════════════════════════
+   SİPARİŞ PANELİ — SÜRÜKLEYEREK BOYUTLANDIRMA (mobil)
+   Mobil dikey düzende sipariş paneli sabit yükseklikte olduğu
+   için alttaki "Siparişi Mutfağa Gönder" butonu ekranın dışında
+   kalabiliyordu. Panelin üstündeki tutamacı yukarı/aşağı
+   sürükleyerek kullanıcı panel yüksekliğini kendi ayarlayabilsin.
+═══════════════════════════════════════════════════════ */
+(function initOrderPanelDrag() {
+  var handle = document.getElementById("orderPanelHandle");
+  var panel  = document.querySelector(".order-panel");
+  if (!handle || !panel) return;
+
+  var dragging     = false;
+  var startY       = 0;
+  var startHeight  = 0;
+
+  function handleIsActive() {
+    // Tutamaç sadece dikey (mobil) düzende görünür; masaüstünde pasif.
+    return window.getComputedStyle(handle).display !== "none";
+  }
+
+  function getBounds() {
+    var container = panel.parentElement; // .pos-body
+    var containerH = container ? container.getBoundingClientRect().height : window.innerHeight;
+    var minH = Math.min(160, containerH * 0.22);
+    var maxH = containerH * 0.85;
+    return { minH: minH, maxH: maxH };
+  }
+
+  function clientY(e) {
+    return e.touches && e.touches.length ? e.touches[0].clientY : e.clientY;
+  }
+
+  function onDragStart(e) {
+    if (!handleIsActive()) return;
+    dragging = true;
+    startY = clientY(e);
+    startHeight = panel.getBoundingClientRect().height;
+    handle.classList.add("dragging");
+    document.body.style.userSelect = "none";
+    if (e.cancelable) e.preventDefault();
+  }
+
+  function onDragMove(e) {
+    if (!dragging) return;
+    var y = clientY(e);
+    var deltaY = startY - y; // yukarı sürükleme = panel büyür
+    var bounds = getBounds();
+    var newHeight = startHeight + deltaY;
+    newHeight = Math.max(bounds.minH, Math.min(bounds.maxH, newHeight));
+    panel.style.height    = newHeight + "px";
+    panel.style.maxHeight = newHeight + "px";
+    if (e.cancelable) e.preventDefault();
+  }
+
+  function onDragEnd() {
+    if (!dragging) return;
+    dragging = false;
+    handle.classList.remove("dragging");
+    document.body.style.userSelect = "";
+  }
+
+  handle.addEventListener("touchstart", onDragStart, { passive: false });
+  handle.addEventListener("mousedown", onDragStart);
+  window.addEventListener("touchmove", onDragMove, { passive: false });
+  window.addEventListener("mousemove", onDragMove);
+  window.addEventListener("touchend", onDragEnd);
+  window.addEventListener("mouseup", onDragEnd);
+
+  // Çift tıklama/dokunma: paneli varsayılan boyutuna sıfırla
+  handle.addEventListener("dblclick", function () {
+    panel.style.height = "";
+    panel.style.maxHeight = "";
+  });
+
+  // Ekran döndürüldüğünde veya masaüstüne geçildiğinde elle
+  // ayarlanmış yüksekliği temizle ki CSS varsayılanı devreye girsin.
+  window.addEventListener("resize", function () {
+    if (!handleIsActive()) {
+      panel.style.height = "";
+      panel.style.maxHeight = "";
+    }
+  });
+})();
