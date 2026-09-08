@@ -1017,11 +1017,13 @@ function updateOrderStatus(orderId, status) {
 ══════════════════════════════════════════════════════ */
 let currentReportTab = "daily";
 
-/* ── GÜNLÜK RAPOR: SEÇİLEN TARİH ─────────────────────
-   Müdür/personel üstteki tarih seçiciyle geçmiş bir günün
-   raporunu görüntüleyebilsin diye "bugün" yerine seçilen
-   tarih kullanılır (varsayılan: bugün). */
-let selectedReportDate = new Date();
+/* ── GÜNLÜK RAPOR: SEÇİLEN TARİH ARALIĞI ─────────────
+   Müdür/personel üstteki iki tarih seçiciyle geçmiş bir gün ya
+   da bir tarih aralığının raporunu görüntüleyebilsin diye
+   "bugün" yerine seçilen aralık kullanılır (varsayılan: bugün
+   tek gün olarak, yani başlangıç = bitiş = bugün). */
+let selectedReportStartDate = new Date();
+let selectedReportEndDate   = new Date();
 
 function _fmtDateInput(d) {
   // <input type="date"> için YYYY-MM-DD formatı (yerel saat, UTC kaymasız)
@@ -1033,30 +1035,48 @@ function _isSameDay(a, b) {
   return a.getFullYear()===b.getFullYear() && a.getMonth()===b.getMonth() && a.getDate()===b.getDate();
 }
 
-/* Seçilen tarihe ait siparişleri getirir (OrderDB.getToday()'in
-   tarih parametreli genel hali — db.js'e dokunmadan). */
-function getOrdersForDate(dateObj) {
-  const start = new Date(dateObj); start.setHours(0,0,0,0);
-  const end   = new Date(start);   end.setDate(end.getDate() + 1);
+/* Seçilen tarih aralığındaki (başlangıç-bitiş dahil) siparişleri
+   getirir (OrderDB.getToday()'in tarih aralığı parametreli genel
+   hali — db.js'e dokunmadan). */
+function getOrdersForDateRange(startDateObj, endDateObj) {
+  const start = new Date(startDateObj); start.setHours(0,0,0,0);
+  const end   = new Date(endDateObj);   end.setHours(0,0,0,0); end.setDate(end.getDate() + 1);
   return OrderDB.getAll().filter(o => {
     const d = new Date(o.createdAt);
     return d >= start && d < end;
   });
 }
 
-/* Rozet/alt başlıklarda göstermek için: bugünse "Bugün",
-   değilse "3 Eylül" gibi kısa tarih. */
-function reportDateLabel(dateObj) {
-  return _isSameDay(dateObj, new Date())
-    ? "Bugün"
-    : dateObj.toLocaleDateString("tr-TR", { day:"numeric", month:"long" });
+/* Rozet/alt başlıklarda göstermek için: tek gün ve bugünse
+   "Bugün", tek gün ama başka bir tarihse "3 Eylül", aralıksa
+   "3 Eylül – 8 Eylül" gibi kısa etiket. */
+function reportDateLabel(startDateObj, endDateObj) {
+  if (_isSameDay(startDateObj, endDateObj)) {
+    return _isSameDay(startDateObj, new Date())
+      ? "Bugün"
+      : startDateObj.toLocaleDateString("tr-TR", { day:"numeric", month:"long" });
+  }
+  const sameYear = startDateObj.getFullYear() === endDateObj.getFullYear();
+  const startStr = startDateObj.toLocaleDateString("tr-TR", { day:"numeric", month:"long", year: sameYear ? undefined : "numeric" });
+  const endStr   = endDateObj.toLocaleDateString("tr-TR", { day:"numeric", month:"long", year:"numeric" });
+  return `${startStr} – ${endStr}`;
 }
 
 function onReportDateChange() {
-  const input = document.getElementById("reportDateInput");
-  if (!input || !input.value) return;
-  const [y, m, d] = input.value.split("-").map(Number);
-  selectedReportDate = new Date(y, m - 1, d);
+  const startInput = document.getElementById("reportStartDateInput");
+  const endInput   = document.getElementById("reportEndDateInput");
+  if (!startInput || !endInput || !startInput.value || !endInput.value) return;
+
+  const [sy, sm, sd] = startInput.value.split("-").map(Number);
+  const [ey, em, ed] = endInput.value.split("-").map(Number);
+  let start = new Date(sy, sm - 1, sd);
+  let end   = new Date(ey, em - 1, ed);
+
+  // Başlangıç bitişten sonraysa diğer alanı hizala (geçersiz aralık olmasın)
+  if (start > end) { end = start; endInput.value = _fmtDateInput(end); }
+
+  selectedReportStartDate = start;
+  selectedReportEndDate   = end;
   if (currentReportTab === "daily") renderDailyReport();
 }
 
@@ -1066,12 +1086,16 @@ function switchReportTab(tab) {
   document.getElementById("rtab-monthly")?.classList.toggle("active", tab === "monthly");
   document.getElementById("report-daily").style.display   = tab === "daily"   ? "flex" : "none";
   document.getElementById("report-monthly").style.display = tab === "monthly" ? "flex" : "none";
-  // Tarih seçici sadece Günlük Rapor'da anlamlı — Aylık Rapor her zaman bu ayı gösterir
-  const dateInput = document.getElementById("reportDateInput");
-  if (dateInput) {
-    dateInput.style.display = tab === "daily" ? "" : "none";
-    dateInput.value = _fmtDateInput(selectedReportDate);
-    dateInput.max   = _fmtDateInput(new Date());
+  // Tarih aralığı seçici sadece Günlük Rapor'da anlamlı — Aylık Rapor her zaman bu ayı gösterir
+  const rangePicker = document.getElementById("reportRangePicker");
+  const startInput   = document.getElementById("reportStartDateInput");
+  const endInput     = document.getElementById("reportEndDateInput");
+  if (rangePicker) rangePicker.style.display = tab === "daily" ? "" : "none";
+  if (startInput && endInput) {
+    startInput.value = _fmtDateInput(selectedReportStartDate);
+    endInput.value   = _fmtDateInput(selectedReportEndDate);
+    startInput.max   = _fmtDateInput(new Date());
+    endInput.max     = _fmtDateInput(new Date());
   }
   if (tab === "daily")   renderDailyReport();
   if (tab === "monthly") renderMonthlyReport();
@@ -1083,10 +1107,10 @@ function renderReports() {
 
 /* ── GÜNLÜK RAPOR ────────────────────────────────── */
 function renderDailyReport() {
-  const allToday  = getOrdersForDate(selectedReportDate).filter(o => o.status !== "cancelled");
+  const allToday  = getOrdersForDateRange(selectedReportStartDate, selectedReportEndDate).filter(o => o.status !== "cancelled");
   const paidToday = allToday.filter(o => o.paid);
 
-  const dateLabel = reportDateLabel(selectedReportDate);
+  const dateLabel = reportDateLabel(selectedReportStartDate, selectedReportEndDate);
   ["dailyBadge1","dailyBadge2","dailyBadge3"].forEach(id => {
     const el = document.getElementById(id);
     if (el) el.textContent = dateLabel;
@@ -1378,15 +1402,16 @@ function renderTopProducts(orders) {
 function exportReportPDF() {
   const isMonthly = currentReportTab === "monthly";
   const now = new Date();
-  const reportDate = isMonthly ? now : selectedReportDate;
-  const dateStr  = reportDate.toLocaleDateString("tr-TR", { day:"2-digit", month:"long", year:"numeric" });
+  const dateStr  = isMonthly
+    ? now.toLocaleDateString("tr-TR", { day:"2-digit", month:"long", year:"numeric" })
+    : reportDateLabel(selectedReportStartDate, selectedReportEndDate);
   const monthStr = now.toLocaleDateString("tr-TR", { month:"long", year:"numeric" });
 
   let reportData, title, subtitle;
 
   if (!isMonthly) {
-    // GÜNLÜK — seçilen tarih
-    const allToday  = getOrdersForDate(selectedReportDate).filter(o => o.status !== "cancelled");
+    // GÜNLÜK — seçilen tarih aralığı
+    const allToday  = getOrdersForDateRange(selectedReportStartDate, selectedReportEndDate).filter(o => o.status !== "cancelled");
     const paid      = allToday.filter(o => o.paid);
     const total     = paid.reduce((s, o) => s + o.total, 0);
     const count     = paid.length;
@@ -1680,7 +1705,7 @@ function renderOrderHistory(orders) {
   if (!container) return;
   const recent = [...orders].reverse().slice(0, 8);
   if (recent.length === 0) {
-    container.innerHTML = `<div style="text-align:center;color:var(--text3);font-size:13px;padding:24px;">Bugün sipariş yok</div>`;
+    container.innerHTML = `<div style="text-align:center;color:var(--text3);font-size:13px;padding:24px;">Seçilen tarihte sipariş yok</div>`;
     return;
   }
   container.innerHTML = recent.map(o => `
