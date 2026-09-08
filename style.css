@@ -1219,11 +1219,13 @@ select.form-input option { background:var(--bg3); }
   }
   .nav-btn .nav-label { display: block; font-size: 8px; }
 
-  /* Barista butonu mobil alt navigasyonda boş/tepkisiz görünüyordu —
-     kaldırıldı. Masaüstü sidebar'da dokunulmadı, orada sorun yok. */
-  #nav-barista { display: none !important; }
+  /* Not: Barista butonu artık mobilde de kullanılabilir — barista
+     görünümü mobil için 2 sütun kaydırmalı grid ile uyumlu hale
+     getirildi (bkz. aşağıdaki .barista-columns kuralı). Görünürlüğü
+     switchToUserView() içindeki rol kontrolü belirliyor, burada
+     zorla gizlemiyoruz.
 
-  /* Rapor butonu artık mobilde de kullanılabilir (tarih seçici ve
+     Rapor butonu artık mobilde de kullanılabilir (tarih seçici ve
      kart/grafik düzeni mobile uyumlu hale getirildi). */
 
   .sidebar-bottom {
