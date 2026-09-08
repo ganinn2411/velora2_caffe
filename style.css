@@ -236,6 +236,11 @@ button:focus-visible, .nav-btn:focus-visible, .product-card:focus-visible { outl
 .topbar-btn.accent-btn { background:var(--accent); border-color:var(--accent); color:#0a0a0a; font-weight:600; }
 .topbar-btn.accent-btn:hover { background:var(--accent2); }
 
+/* ── RAPOR TARİH ARALIĞI SEÇİCİ ─────────────────────── */
+.report-range-picker { display:flex; align-items:center; gap:6px; }
+.report-range-picker .range-date { padding:0 10px; width:140px; }
+.report-range-sep { color:var(--text3); font-size:13px; font-weight:600; }
+
 .search-box {
   display:flex; align-items:center; background:var(--bg3); border:var(--border2);
   border-radius:var(--r); padding:0 12px; height:38px; gap:8px; width:260px; transition:var(--transition);
@@ -1311,7 +1316,9 @@ select.form-input option { background:var(--bg3); }
   .topbar-time { display: none; }
   .topbar-btn span { display: none; } /* Metinleri gizle, sadece ikon */
   .topbar-btn { padding: 0 10px; }
-  #reportDateInput { max-width: 108px; padding: 0 6px; font-size: 12px; }
+  .report-range-picker { gap: 4px; }
+  .report-range-picker .range-date { max-width: 92px; width: 92px; padding: 0 4px; font-size: 11px; }
+  .report-range-sep { font-size: 11px; }
 
   /* Barista: mobilde 2 sütun scroll */
   .barista-columns {
@@ -1436,6 +1443,9 @@ select.form-input option { background:var(--bg3); }
 
   .order-panel { max-height: 40vh; }
   .nav-btn .nav-label { display: none; }
+
+  .report-range-picker .range-date { width: 78px; max-width: 78px; font-size: 10px; padding: 0 2px; }
+  .report-range-sep { display: none; }
 }
 
 /* ── LANDSCAPE KÜÇÜK EKRAN (yatay telefon) ──────────── */
