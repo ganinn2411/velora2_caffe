@@ -367,7 +367,11 @@
             <div class="topbar-meta clock-date"></div>
           </div>
           <div class="topbar-right">
-            <input type="date" id="reportDateInput" class="topbar-btn" style="cursor:pointer;color:var(--text);" onchange="onReportDateChange()">
+            <div class="report-range-picker" id="reportRangePicker">
+              <input type="date" id="reportStartDateInput" class="topbar-btn range-date" style="cursor:pointer;color:var(--text);" onchange="onReportDateChange()">
+              <span class="report-range-sep">–</span>
+              <input type="date" id="reportEndDateInput" class="topbar-btn range-date" style="cursor:pointer;color:var(--text);" onchange="onReportDateChange()">
+            </div>
             <button class="topbar-btn accent-btn" id="pdfExportBtn" onclick="exportReportPDF()">
               <i class="fa-solid fa-file-pdf"></i> PDF İndir
             </button>
