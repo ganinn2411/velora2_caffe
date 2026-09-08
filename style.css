@@ -1223,9 +1223,8 @@ select.form-input option { background:var(--bg3); }
      kaldırıldı. Masaüstü sidebar'da dokunulmadı, orada sorun yok. */
   #nav-barista { display: none !important; }
 
-  /* Rapor butonu da aynı şekilde mobilde bozuk/boş görünüyordu —
-     kaldırıldı. Masaüstünde dokunulmadı. */
-  #nav-reports { display: none !important; }
+  /* Rapor butonu artık mobilde de kullanılabilir (tarih seçici ve
+     kart/grafik düzeni mobile uyumlu hale getirildi). */
 
   .sidebar-bottom {
     display: none; /* Bottom nav'da logout, settings sidebar'dan gelecek */
@@ -1310,6 +1309,7 @@ select.form-input option { background:var(--bg3); }
   .topbar-time { display: none; }
   .topbar-btn span { display: none; } /* Metinleri gizle, sadece ikon */
   .topbar-btn { padding: 0 10px; }
+  #reportDateInput { max-width: 108px; padding: 0 6px; font-size: 12px; }
 
   /* Barista: mobilde 2 sütun scroll */
   .barista-columns {
